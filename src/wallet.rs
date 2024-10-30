@@ -23,9 +23,31 @@ pub struct WalletContext {
 }
 
 impl WalletContext {
+    fn load_stored_state() -> Option<WalletState> {
+        if let Some(window) = web_sys::window() {
+            if let Some(storage) = window.local_storage().ok()? {
+                if let Some(data) = storage.get_item("wallet_state").ok()? {
+                    return serde_json::from_str(&data).ok();
+                }
+            }
+        }
+        None
+    }
+
+    fn save_state(&self, state: &WalletState) {
+        if let Some(window) = web_sys::window() {
+            if let Some(storage) = window.local_storage().ok() {
+                if let Ok(data) = serde_json::to_string(state) {
+                    let _ = storage.set_item("wallet_state", &data);
+                }
+            }
+        }
+    }
+
     pub fn connect(&self, wallet_type: WalletType) {
         let window = web_sys::window().unwrap();
         let set_state = self.set_state;
+        let this = self.clone();
         
         match wallet_type {
             WalletType::Phantom => {
@@ -38,13 +60,15 @@ impl WalletContext {
                             .call0(&solana);
                             
                         if let Ok(_) = connect_result {
-                            set_state.update(|state| {
-                                state.connected = true;
-                                state.wallet_type = Some(WalletType::Phantom);
-                                if let Some(public_key) = js_sys::Reflect::get(&solana, &"publicKey".into()).ok() {
-                                    state.address = Some(public_key.as_string().unwrap());
-                                }
-                            });
+                            let new_state = WalletState {
+                                connected: true,
+                                wallet_type: Some(WalletType::Phantom),
+                                address: js_sys::Reflect::get(&solana, &"publicKey".into())
+                                    .ok()
+                                    .and_then(|key| key.as_string()),
+                            };
+                            set_state.set(new_state.clone());
+                            this.save_state(&new_state);
                         }
                     });
                 }
@@ -67,11 +91,13 @@ impl WalletContext {
                             
                         if let Ok(accounts) = accounts {
                             if let Some(first_account) = js_sys::Reflect::get(&accounts, &0.into()).ok() {
-                                set_state.update(|state| {
-                                    state.connected = true;
-                                    state.wallet_type = Some(WalletType::MetaMask);
-                                    state.address = Some(first_account.as_string().unwrap());
-                                });
+                                let new_state = WalletState {
+                                    connected: true,
+                                    wallet_type: Some(WalletType::MetaMask),
+                                    address: Some(first_account.as_string().unwrap()),
+                                };
+                                set_state.set(new_state.clone());
+                                self.save_state(&new_state);
                             }
                         }
                     });
@@ -86,16 +112,21 @@ impl WalletContext {
             state.address = None;
             state.wallet_type = None;
         });
+        if let Some(window) = web_sys::window() {
+            if let Some(storage) = window.local_storage().ok() {
+                let _ = storage.remove_item("wallet_state");
+            }
+        }
     }
 }
 
 #[component]
 pub fn WalletProvider(children: Children) -> impl IntoView {
-    let initial_state = WalletState {
+    let initial_state = WalletContext::load_stored_state().unwrap_or(WalletState {
         connected: false,
         address: None,
         wallet_type: None,
-    };
+    });
     
     let (state, set_state) = create_signal(initial_state);
     
