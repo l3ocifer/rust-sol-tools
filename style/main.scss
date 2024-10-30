@@ -132,6 +132,11 @@ body {
             &::placeholder {
                 color: rgba(0, 255, 65, 0.3);
             }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
         }
     }
 }
@@ -157,27 +162,33 @@ body {
 }
 
 .wallet-connect {
-    margin-left: auto;
+    margin: 0 1rem;
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .wallet-info {
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.5rem;
+    background: var(--card-background);
+    border-radius: 4px;
+    border: 1px solid var(--primary-color);
 }
 
 .wallet-address {
     font-family: var(--font-family);
     font-size: 0.9rem;
     color: var(--text-color);
-    background: var(--card-background);
     padding: 0.5rem;
     border-radius: 4px;
-    border: 1px solid var(--primary-color);
-    max-width: 150px;
+    max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
