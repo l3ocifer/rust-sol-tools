@@ -27,15 +27,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = envy::from_env::<Env>()?;
     let rpc_url = env.rpc_url.to_string();
     let client = RpcClient::new_with_commitment(rpc_url.clone(), CommitmentConfig::confirmed());
-    let payer = read_keypair_file(env.signer_keypair_path.clone())?;
+    let payer = read_keypair_file(&env.signer_keypair_path)
+        .map_err(|e| format!("Failed to read keypair file: {}", e))?;
+
+    println!("Creating new token with name: {}", env.token_name);
 
     // Generate a new keypair for the mint account
     let mint_account = Keypair::new();
-
+    
     // Calculate the minimum balance for rent exemption
-    let mint_rent = client.get_minimum_balance_for_rent_exemption(Mint::LEN)?;
+    let mint_rent = client
+        .get_minimum_balance_for_rent_exemption(Mint::LEN)
+        .map_err(|e| format!("Failed to get rent exemption: {}", e))?;
 
-    // Create the mint account
+    // Create transaction instructions
     let create_mint_account_ix = system_instruction::create_account(
         &payer.pubkey(),
         &mint_account.pubkey(),
@@ -44,7 +49,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &spl_token::id(),
     );
 
-    // Initialize the mint
     let initialize_mint_ix = spl_token::instruction::initialize_mint(
         &spl_token::id(),
         &mint_account.pubkey(),
@@ -55,33 +59,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create the associated token account for the payer
     let ata = get_associated_token_address(&payer.pubkey(), &mint_account.pubkey());
+    
     let create_ata_ix = spl_associated_token_account::instruction::create_associated_token_account(
         &payer.pubkey(),
         &payer.pubkey(),
         &mint_account.pubkey(),
     );
 
-    // Mint tokens to the associated token account (Optional)
-    let amount = 1; // Adjust the amount as needed
-    let mint_to_ix = spl_token::instruction::mint_to(
-        &spl_token::id(),
-        &mint_account.pubkey(),
-        &ata,
-        &payer.pubkey(),
-        &[],
-        amount,
-    )?;
-
-    // Create Metadata account
-    let metadata_account = Pubkey::find_program_address(
+    // Create metadata account
+    let (metadata_account, _) = Pubkey::find_program_address(
         &[
             b"metadata",
             TOKEN_METADATA_PROGRAM_ID.as_ref(),
             mint_account.pubkey().as_ref(),
         ],
         &TOKEN_METADATA_PROGRAM_ID,
-    )
-    .0;
+    );
 
     let metadata_data = Data {
         name: env.token_name.clone(),
@@ -91,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         creators: None,
     };
 
-    let create_metadata_accounts_ix = token_metadata_instruction::create_metadata_accounts(
+    let create_metadata_accounts_ix = token_metadata_instruction::create_metadata_accounts_v3(
         TOKEN_METADATA_PROGRAM_ID,
         metadata_account,
         mint_account.pubkey(),
@@ -104,32 +97,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,
         0,
         true,
-        false,
+        true,  // Is mutable
+        None,  // Collection
+        None,  // Uses
+        None,  // Collection Details
     );
 
-    // Build the transaction
+    // Build and send transaction
+    let recent_blockhash = client
+        .get_latest_blockhash()
+        .map_err(|e| format!("Failed to get recent blockhash: {}", e))?;
+
     let mut transaction = Transaction::new_with_payer(
         &[
             create_mint_account_ix,
             initialize_mint_ix,
             create_ata_ix,
-            mint_to_ix,
             create_metadata_accounts_ix,
         ],
         Some(&payer.pubkey()),
     );
 
-    let recent_blockhash = client.get_latest_blockhash()?;
     transaction.sign(&[&payer, &mint_account], recent_blockhash);
 
-    // Send the transaction
-    client.send_and_confirm_transaction(&transaction)?;
+    client
+        .send_and_confirm_transaction(&transaction)
+        .map_err(|e| format!("Failed to send transaction: {}", e))?;
 
-    println!("Token mint created successfully.");
+    println!("Token created successfully!");
     println!("Mint Address: {}", mint_account.pubkey());
-    println!("Token Name: {}", env.token_name);
-    println!("Token Symbol: {}", env.token_symbol);
-    println!("Token URI: {}", env.token_uri);
+    println!("Metadata Address: {}", metadata_account);
 
     Ok(())
 } 
