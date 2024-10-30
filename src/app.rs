@@ -1,7 +1,6 @@
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use leptos::logging::log;
 use web_sys::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 
@@ -71,7 +70,7 @@ fn CreateTokenPage() -> impl IntoView {
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
-        log!("Creating token: {} {} {}", token_name.get(), token_symbol.get(), token_uri.get());
+        logging::log!("Creating token: {} {} {}", token_name.get(), token_symbol.get(), token_uri.get());
         // TODO: Implement token creation
     };
 
@@ -146,7 +145,7 @@ fn MintTokenPage() -> impl IntoView {
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
-        log!("Minting {} tokens to {} from mint {}", 
+        logging::log!("Minting {} tokens to {} from mint {}", 
             amount.get(), 
             receiver_address.get(), 
             mint_address.get()
