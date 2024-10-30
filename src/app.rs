@@ -71,7 +71,6 @@ fn CreateTokenPage() -> impl IntoView {
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         logging::log!("Creating token: {} {} {}", token_name.get(), token_symbol.get(), token_uri.get());
-        // TODO: Implement token creation
     };
 
     view! {

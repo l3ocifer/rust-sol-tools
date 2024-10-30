@@ -1,6 +1,7 @@
 use leptos::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+use gloo_utils::format::JsValueSerdeExt;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WalletState {
@@ -17,8 +18,8 @@ pub enum WalletType {
 
 #[derive(Clone)]
 pub struct WalletContext {
-    state: ReadSignal<WalletState>,
-    set_state: WriteSignal<WalletState>,
+    pub state: ReadSignal<WalletState>,
+    pub set_state: WriteSignal<WalletState>,
 }
 
 impl WalletContext {
@@ -65,13 +66,13 @@ impl WalletContext {
                             .call1(&ethereum, &request_value);
                             
                         if let Ok(accounts) = accounts {
-                            set_state.update(|state| {
-                                state.connected = true;
-                                state.wallet_type = Some(WalletType::MetaMask);
-                                if let Some(account) = js_sys::Reflect::get(&accounts, &0.into()).ok() {
-                                    state.address = Some(account.as_string().unwrap());
-                                }
-                            });
+                            if let Some(first_account) = js_sys::Reflect::get(&accounts, &0.into()).ok() {
+                                set_state.update(|state| {
+                                    state.connected = true;
+                                    state.wallet_type = Some(WalletType::MetaMask);
+                                    state.address = Some(first_account.as_string().unwrap());
+                                });
+                            }
                         }
                     });
                 }
