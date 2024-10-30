@@ -8,7 +8,7 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Stylesheet id="leptos" href="/pkg/sol-tools.css"/>
-        <Link rel="shortcut icon" type="image/ico" href="/favicon.ico"/>
+        <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
         <Title text="Solana Tools - Token Creation & Management"/>
 
         <Router>
@@ -63,11 +63,17 @@ fn CreateTokenPage() -> impl IntoView {
     let (token_uri, set_token_uri) = create_signal(String::new());
     let (decimals, set_decimals) = create_signal(9u8);
 
+    let on_submit = move |ev: web_sys::Event| {
+        ev.prevent_default();
+        log!("Creating token: {} {} {}", token_name.get(), token_symbol.get(), token_uri.get());
+        // TODO: Implement token creation
+    };
+
     view! {
         <div class="container">
             <h2>"Create New SPL Token"</h2>
             
-            <form class="token-form">
+            <form class="token-form" on:submit=on_submit>
                 <div class="form-group">
                     <label for="token_name">"Token Name"</label>
                     <input
@@ -75,7 +81,7 @@ fn CreateTokenPage() -> impl IntoView {
                         id="token_name"
                         placeholder="Enter token name"
                         on:input=move |ev| {
-                            set_token_name(event_target_value(&ev));
+                            set_token_name.set(event_target_value(&ev));
                         }
                     />
                 </div>
@@ -87,7 +93,7 @@ fn CreateTokenPage() -> impl IntoView {
                         id="token_symbol"
                         placeholder="Enter token symbol"
                         on:input=move |ev| {
-                            set_token_symbol(event_target_value(&ev));
+                            set_token_symbol.set(event_target_value(&ev));
                         }
                     />
                 </div>
@@ -99,7 +105,7 @@ fn CreateTokenPage() -> impl IntoView {
                         id="token_uri"
                         placeholder="Enter metadata URI"
                         on:input=move |ev| {
-                            set_token_uri(event_target_value(&ev));
+                            set_token_uri.set(event_target_value(&ev));
                         }
                     />
                 </div>
@@ -114,7 +120,7 @@ fn CreateTokenPage() -> impl IntoView {
                         value="9"
                         on:input=move |ev| {
                             if let Ok(value) = event_target_value(&ev).parse() {
-                                set_decimals(value);
+                                set_decimals.set(value);
                             }
                         }
                     />
@@ -132,11 +138,21 @@ fn MintTokenPage() -> impl IntoView {
     let (receiver_address, set_receiver_address) = create_signal(String::new());
     let (amount, set_amount) = create_signal(0u64);
 
+    let on_submit = move |ev: web_sys::Event| {
+        ev.prevent_default();
+        log!("Minting {} tokens to {} from mint {}", 
+            amount.get(), 
+            receiver_address.get(), 
+            mint_address.get()
+        );
+        // TODO: Implement token minting
+    };
+
     view! {
         <div class="container">
             <h2>"Mint SPL Tokens"</h2>
             
-            <form class="token-form">
+            <form class="token-form" on:submit=on_submit>
                 <div class="form-group">
                     <label for="mint_address">"Token Mint Address"</label>
                     <input
@@ -144,7 +160,7 @@ fn MintTokenPage() -> impl IntoView {
                         id="mint_address"
                         placeholder="Enter token mint address"
                         on:input=move |ev| {
-                            set_mint_address(event_target_value(&ev));
+                            set_mint_address.set(event_target_value(&ev));
                         }
                     />
                 </div>
@@ -156,7 +172,7 @@ fn MintTokenPage() -> impl IntoView {
                         id="receiver_address"
                         placeholder="Enter receiver's wallet address"
                         on:input=move |ev| {
-                            set_receiver_address(event_target_value(&ev));
+                            set_receiver_address.set(event_target_value(&ev));
                         }
                     />
                 </div>
@@ -170,7 +186,7 @@ fn MintTokenPage() -> impl IntoView {
                         placeholder="Enter amount to mint"
                         on:input=move |ev| {
                             if let Ok(value) = event_target_value(&ev).parse() {
-                                set_amount(value);
+                                set_amount.set(value);
                             }
                         }
                     />

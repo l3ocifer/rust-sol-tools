@@ -28,6 +28,7 @@ borsh = "0.10"
 url = "2.5"
 envy = "0.4"
 serde = { version = "1.0", features = ["derive"] }
+hostname = "0.3"
 
 [features]
 csr = ["leptos/csr", "leptos_meta/csr", "leptos_router/csr"]
