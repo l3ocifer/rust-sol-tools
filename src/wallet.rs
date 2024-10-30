@@ -1,7 +1,6 @@
 use leptos::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-use web_sys::CustomEvent;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WalletState {
@@ -25,6 +24,7 @@ pub struct WalletContext {
 impl WalletContext {
     pub fn connect(&self, wallet_type: WalletType) {
         let window = web_sys::window().unwrap();
+        let set_state = self.set_state;
         
         match wallet_type {
             WalletType::Phantom => {
@@ -37,11 +37,9 @@ impl WalletContext {
                             .call0(&solana);
                             
                         if let Ok(_) = connect_result {
-                            // Update wallet state
-                            self.set_state.update(|state| {
+                            set_state.update(|state| {
                                 state.connected = true;
                                 state.wallet_type = Some(WalletType::Phantom);
-                                // Get public key
                                 if let Some(public_key) = js_sys::Reflect::get(&solana, &"publicKey".into()).ok() {
                                     state.address = Some(public_key.as_string().unwrap());
                                 }
@@ -53,23 +51,26 @@ impl WalletContext {
             WalletType::MetaMask => {
                 if let Some(ethereum) = window.get("ethereum") {
                     wasm_bindgen_futures::spawn_local(async move {
+                        let request_value = js_sys::Object::new();
+                        js_sys::Reflect::set(
+                            &request_value,
+                            &"method".into(),
+                            &"eth_requestAccounts".into(),
+                        ).unwrap();
+
                         let accounts = js_sys::Reflect::get(&ethereum, &"request".into())
                             .unwrap()
                             .dyn_into::<js_sys::Function>()
                             .unwrap()
-                            .call1(
-                                &ethereum,
-                                &JsValue::from_serde(&serde_json::json!({
-                                    "method": "eth_requestAccounts"
-                                })).unwrap(),
-                            );
+                            .call1(&ethereum, &request_value);
                             
                         if let Ok(accounts) = accounts {
-                            // Update wallet state
-                            self.set_state.update(|state| {
+                            set_state.update(|state| {
                                 state.connected = true;
                                 state.wallet_type = Some(WalletType::MetaMask);
-                                state.address = Some(accounts[0].as_string().unwrap());
+                                if let Some(account) = js_sys::Reflect::get(&accounts, &0.into()).ok() {
+                                    state.address = Some(account.as_string().unwrap());
+                                }
                             });
                         }
                     });
@@ -88,22 +89,21 @@ impl WalletContext {
 }
 
 #[component]
-pub fn WalletProvider(cx: Scope, children: Children) -> impl IntoView {
+pub fn WalletProvider(children: Children) -> impl IntoView {
     let initial_state = WalletState {
         connected: false,
         address: None,
         wallet_type: None,
     };
     
-    let (state, set_state) = create_signal(cx, initial_state);
+    let (state, set_state) = create_signal(initial_state);
     
     provide_context(
-        cx,
         WalletContext {
             state,
             set_state,
         }
     );
     
-    view! { cx, {children()} }
+    view! { {children()} }
 } 
