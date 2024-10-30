@@ -1,6 +1,8 @@
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+use leptos::logging::log;
+use web_sys::SubmitEvent;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -61,9 +63,9 @@ fn CreateTokenPage() -> impl IntoView {
     let (token_name, set_token_name) = create_signal(String::new());
     let (token_symbol, set_token_symbol) = create_signal(String::new());
     let (token_uri, set_token_uri) = create_signal(String::new());
-    let (decimals, set_decimals) = create_signal(9u8);
+    let (_decimals, set_decimals) = create_signal(9u8);
 
-    let on_submit = move |ev: web_sys::Event| {
+    let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         log!("Creating token: {} {} {}", token_name.get(), token_symbol.get(), token_uri.get());
         // TODO: Implement token creation
@@ -138,7 +140,7 @@ fn MintTokenPage() -> impl IntoView {
     let (receiver_address, set_receiver_address) = create_signal(String::new());
     let (amount, set_amount) = create_signal(0u64);
 
-    let on_submit = move |ev: web_sys::Event| {
+    let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         log!("Minting {} tokens to {} from mint {}", 
             amount.get(), 

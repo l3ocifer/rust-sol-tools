@@ -4442,6 +4442,7 @@ dependencies = [
  "spl-token 4.0.0",
  "url",
  "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
