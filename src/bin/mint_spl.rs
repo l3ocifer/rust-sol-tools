@@ -15,6 +15,7 @@ struct Env {
     receiver_pubkey: String,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = envy::from_env::<Env>()?;
     let signer_wallet = Keypair::from_base58_string(&env.signer_keypair);

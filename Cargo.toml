@@ -16,19 +16,20 @@ leptos_meta = { version = "0.6" }
 leptos_actix = { version = "0.6", optional = true }
 leptos_router = { version = "0.6" }
 wasm-bindgen = "=0.2.93"
+serde = { version = "1.0", features = ["derive"] }
 
-# Solana dependencies
+# Conditionally include Solana and system dependencies only for non-WASM targets
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 solana-client = "1.16"
 solana-program = "1.16"
 solana-sdk = "1.16"
-spl-token = "4.0"
-spl-associated-token-account = "2.0"
-mpl-token-metadata = "1.13"
+spl-token = { version = "4.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "2.0", features = ["no-entrypoint"] }
+mpl-token-metadata = { version = "1.13", features = ["no-entrypoint"] }
 borsh = "0.10"
 url = "2.5"
 envy = "0.4"
-serde = { version = "1.0", features = ["derive"] }
-hostname = "0.3"
+libc = { version = "0.2.147", features = ["extra_traits", "use_std"] }
 
 [features]
 csr = ["leptos/csr", "leptos_meta/csr", "leptos_router/csr"]

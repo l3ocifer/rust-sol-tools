@@ -22,6 +22,7 @@ struct Env {
     token_decimals: u8,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = envy::from_env::<Env>()?;
     let rpc_url = env.rpc_url.to_string();
