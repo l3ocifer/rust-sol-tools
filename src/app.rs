@@ -63,6 +63,7 @@ fn HomePage() -> impl IntoView {
 
 #[component]
 fn CreateTokenPage() -> impl IntoView {
+    let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
     let (token_name, set_token_name) = create_signal(String::new());
     let (token_symbol, set_token_symbol) = create_signal(String::new());
     let (token_uri, set_token_uri) = create_signal(String::new());
@@ -70,6 +71,10 @@ fn CreateTokenPage() -> impl IntoView {
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
+        if !wallet_ctx.state.get().connected {
+            logging::warn!("Please connect your wallet first");
+            return;
+        }
         logging::log!("Creating token: {} {} {}", token_name.get(), token_symbol.get(), token_uri.get());
     };
 
@@ -130,7 +135,13 @@ fn CreateTokenPage() -> impl IntoView {
                     />
                 </div>
 
-                <button type="submit" class="button">"Create Token"</button>
+                <button type="submit" class="button">
+                    {move || if wallet_ctx.state.get().connected {
+                        "Create Token"
+                    } else {
+                        "Connect Wallet to Create"
+                    }}
+                </button>
             </form>
         </div>
     }
@@ -138,18 +149,22 @@ fn CreateTokenPage() -> impl IntoView {
 
 #[component]
 fn MintTokenPage() -> impl IntoView {
+    let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
     let (mint_address, set_mint_address) = create_signal(String::new());
     let (receiver_address, set_receiver_address) = create_signal(String::new());
     let (amount, set_amount) = create_signal(0u64);
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
+        if !wallet_ctx.state.get().connected {
+            logging::warn!("Please connect your wallet first");
+            return;
+        }
         logging::log!("Minting {} tokens to {} from mint {}", 
             amount.get(), 
             receiver_address.get(), 
             mint_address.get()
         );
-        // TODO: Implement token minting
     };
 
     view! {
@@ -196,7 +211,13 @@ fn MintTokenPage() -> impl IntoView {
                     />
                 </div>
 
-                <button type="submit" class="button">"Mint Tokens"</button>
+                <button type="submit" class="button">
+                    {move || if wallet_ctx.state.get().connected {
+                        "Mint Tokens"
+                    } else {
+                        "Connect Wallet to Mint"
+                    }}
+                </button>
             </form>
         </div>
     }
