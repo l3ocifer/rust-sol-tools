@@ -4427,7 +4427,9 @@ dependencies = [
  "borsh 0.10.4",
  "console_error_panic_hook",
  "envy",
+ "gloo-utils",
  "http 1.1.0",
+ "js-sys",
  "leptos",
  "leptos_actix",
  "leptos_meta",
@@ -4442,6 +4444,7 @@ dependencies = [
  "spl-token 4.0.0",
  "url",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
 ]
 

@@ -3,6 +3,7 @@ use leptos_meta::*;
 use leptos_router::*;
 use leptos::logging::log;
 use web_sys::SubmitEvent;
+use crate::wallet::{WalletProvider, WalletContext, WalletType};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -13,24 +14,27 @@ pub fn App() -> impl IntoView {
         <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
         <Title text="Solana Tools - Token Creation & Management"/>
 
-        <Router>
-            <main>
-                <nav class="header">
-                    <h1>"Solana Tools"</h1>
-                    <div class="nav-links">
-                        <A href="/">"Home"</A>
-                        <A href="/create">"Create Token"</A>
-                        <A href="/mint">"Mint Tokens"</A>
-                    </div>
-                </nav>
+        <WalletProvider>
+            <Router>
+                <main>
+                    <nav class="header">
+                        <h1>"Solana Tools"</h1>
+                        <div class="nav-links">
+                            <A href="/">"Home"</A>
+                            <A href="/create">"Create Token"</A>
+                            <A href="/mint">"Mint Tokens"</A>
+                            <WalletConnect/>
+                        </div>
+                    </nav>
 
-                <Routes>
-                    <Route path="/" view=HomePage/>
-                    <Route path="/create" view=CreateTokenPage/>
-                    <Route path="/mint" view=MintTokenPage/>
-                </Routes>
-            </main>
-        </Router>
+                    <Routes>
+                        <Route path="/" view=HomePage/>
+                        <Route path="/create" view=CreateTokenPage/>
+                        <Route path="/mint" view=MintTokenPage/>
+                    </Routes>
+                </main>
+            </Router>
+        </WalletProvider>
     }
 }
 
@@ -196,6 +200,38 @@ fn MintTokenPage() -> impl IntoView {
 
                 <button type="submit" class="button">"Mint Tokens"</button>
             </form>
+        </div>
+    }
+}
+
+#[component]
+fn WalletConnect() -> impl IntoView {
+    let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
+    let state = wallet_ctx.state;
+
+    let connect_phantom = move |_| wallet_ctx.connect(WalletType::Phantom);
+    let connect_metamask = move |_| wallet_ctx.connect(WalletType::MetaMask);
+    let disconnect = move |_| wallet_ctx.disconnect();
+
+    view! {
+        <div class="wallet-connect">
+            {move || {
+                if state.get().connected {
+                    view! {
+                        <div class="wallet-info">
+                            <span class="wallet-address">{state.get().address.unwrap_or_default()}</span>
+                            <button class="button" on:click=disconnect>"Disconnect"</button>
+                        </div>
+                    }
+                } else {
+                    view! {
+                        <div class="wallet-buttons">
+                            <button class="button" on:click=connect_phantom>"Connect Phantom"</button>
+                            <button class="button" on:click=connect_metamask>"Connect MetaMask"</button>
+                        </div>
+                    }
+                }
+            }}
         </div>
     }
 }

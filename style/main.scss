@@ -156,6 +156,38 @@ body {
     }
 }
 
+.wallet-connect {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wallet-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wallet-address {
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    color: var(--text-color);
+    background: var(--card-background);
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--primary-color);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wallet-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
 @media (max-width: 768px) {
     .header {
         padding: 1rem 0.5rem;
@@ -167,5 +199,15 @@ body {
 
     .token-form {
         padding: 1rem;
+    }
+
+    .wallet-connect {
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .wallet-buttons {
+        flex-direction: column;
     }
 }
