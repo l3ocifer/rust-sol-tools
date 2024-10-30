@@ -1,5 +1,6 @@
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
+    commitment_config::CommitmentConfig,
     instruction::Instruction,
     pubkey::Pubkey,
     signer::{keypair::Keypair, Signer},
@@ -10,55 +11,68 @@ use spl_associated_token_account::instruction as associated_token_instruction;
 #[derive(serde::Deserialize)]
 struct Env {
     rpc_url: url::Url,
-    signer_keypair: String,
+    signer_keypair_path: String,
     mint_account_pubkey: String,
     receiver_pubkey: String,
+    amount: u64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = envy::from_env::<Env>()?;
-    let signer_wallet = Keypair::from_base58_string(&env.signer_keypair);
-    let client = RpcClient::new(env.rpc_url.to_string());
-    let receiver_pubkey: Pubkey = env.receiver_pubkey.parse()?;
-    let mint_account_pubkey: Pubkey = env.mint_account_pubkey.parse()?;
+    let rpc_url = env.rpc_url.to_string();
+    let client = RpcClient::new_with_commitment(rpc_url, CommitmentConfig::confirmed());
+    let payer = solana_sdk::signature::read_keypair_file(&env.signer_keypair_path)
+        .map_err(|e| format!("Failed to read keypair file: {}", e))?;
+    
+    let receiver_pubkey: Pubkey = env.receiver_pubkey.parse()
+        .map_err(|e| format!("Invalid receiver pubkey: {}", e))?;
+    let mint_account_pubkey: Pubkey = env.mint_account_pubkey.parse()
+        .map_err(|e| format!("Invalid mint account pubkey: {}", e))?;
 
-    let amount = 10_000;
+    println!("Minting {} tokens to {}", env.amount, receiver_pubkey);
 
-    let assoc = spl_associated_token_account::get_associated_token_address(
+    // Get or create associated token account
+    let associated_token_account = spl_associated_token_account::get_associated_token_address(
         &receiver_pubkey,
         &mint_account_pubkey,
     );
 
-    let assoc_instruction = associated_token_instruction::create_associated_token_account(
-        &signer_wallet.pubkey(), // Payer
-        &receiver_pubkey,        // Wallet address
-        &mint_account_pubkey,    // Mint address
+    let create_ata_ix = associated_token_instruction::create_associated_token_account(
+        &payer.pubkey(),
+        &receiver_pubkey,
+        &mint_account_pubkey,
     );
 
-    let mint_to_instruction: Instruction = spl_token::instruction::mint_to(
+    let mint_to_ix = spl_token::instruction::mint_to(
         &spl_token::id(),
         &mint_account_pubkey,
-        &assoc,
-        &signer_wallet.pubkey(),
+        &associated_token_account,
+        &payer.pubkey(),
         &[],
-        amount,
-    )?;
+        env.amount,
+    ).map_err(|e| format!("Failed to create mint instruction: {}", e))?;
 
-    let recent_blockhash = client.get_latest_blockhash()?;
-    let transaction: Transaction = Transaction::new_signed_with_payer(
-        &[assoc_instruction, mint_to_instruction],
-        Some(&signer_wallet.pubkey()),
-        &[&signer_wallet],
-        recent_blockhash,
+    // Build and send transaction
+    let recent_blockhash = client
+        .get_latest_blockhash()
+        .map_err(|e| format!("Failed to get recent blockhash: {}", e))?;
+
+    let mut transaction = Transaction::new_with_payer(
+        &[create_ata_ix, mint_to_ix],
+        Some(&payer.pubkey()),
     );
 
-    client.send_and_confirm_transaction(&transaction)?;
+    transaction.sign(&[&payer], recent_blockhash);
 
-    println!("SPL Tokens minted successfully.");
-    println!("Amount: {}", amount);
-    println!("Receiver pubkey: {}", receiver_pubkey.to_string());
-    println!("Associated token account: {}", assoc.to_string());
+    client
+        .send_and_confirm_transaction(&transaction)
+        .map_err(|e| format!("Failed to send transaction: {}", e))?;
+
+    println!("Tokens minted successfully!");
+    println!("Amount: {}", env.amount);
+    println!("Receiver: {}", receiver_pubkey);
+    println!("Associated Token Account: {}", associated_token_account);
 
     Ok(())
 } 
