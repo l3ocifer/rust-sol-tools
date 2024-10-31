@@ -8,9 +8,9 @@ use solana_sdk::{
 };
 use spl_associated_token_account::{self, get_associated_token_address};
 use spl_token::state::Mint;
-use mpl_token_metadata::{instruction as token_metadata_instruction, ID as TOKEN_METADATA_PROGRAM_ID};
-use mpl_token_metadata::state::Data;
-use borsh::BorshSerialize;
+use mpl_token_metadata::instructions as token_metadata_instruction;
+use mpl_token_metadata::types::DataV2;
+use borsh::ser::BorshSerialize;
 
 #[derive(serde::Deserialize)]
 struct Env {
@@ -20,6 +20,8 @@ struct Env {
     token_symbol: String,
     token_uri: String,
     token_decimals: u8,
+    initial_supply: u64,
+    recipient_address: Option<String>, // Optional recipient, defaults to creator if None
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -32,101 +34,107 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Creating new token with name: {}", env.token_name);
 
-    // Generate a new keypair for the mint account
+    // Generate mint account
     let mint_account = Keypair::new();
-    
-    // Calculate the minimum balance for rent exemption
-    let mint_rent = client
-        .get_minimum_balance_for_rent_exemption(Mint::LEN)
-        .map_err(|e| format!("Failed to get rent exemption: {}", e))?;
+    let mint_rent = client.get_minimum_balance_for_rent_exemption(Mint::LEN)?;
 
-    // Create transaction instructions
-    let create_mint_account_ix = system_instruction::create_account(
-        &payer.pubkey(),
-        &mint_account.pubkey(),
-        mint_rent,
-        Mint::LEN as u64,
-        &spl_token::id(),
+    // Determine recipient
+    let recipient = if let Some(addr) = env.recipient_address {
+        addr.parse::<Pubkey>()?
+    } else {
+        payer.pubkey()
+    };
+
+    // Create all necessary instructions
+    let mut instructions = vec![
+        // Create mint account
+        system_instruction::create_account(
+            &payer.pubkey(),
+            &mint_account.pubkey(),
+            mint_rent,
+            Mint::LEN as u64,
+            &spl_token::id(),
+        ),
+        // Initialize mint
+        spl_token::instruction::initialize_mint(
+            &spl_token::id(),
+            &mint_account.pubkey(),
+            &payer.pubkey(),
+            Some(&payer.pubkey()),
+            env.token_decimals,
+        )?,
+    ];
+
+    // Create recipient's ATA
+    let recipient_ata = get_associated_token_address(&recipient, &mint_account.pubkey());
+    instructions.push(
+        spl_associated_token_account::instruction::create_associated_token_account(
+            &payer.pubkey(),
+            &recipient,
+            &mint_account.pubkey(),
+        ),
     );
 
-    let initialize_mint_ix = spl_token::instruction::initialize_mint(
-        &spl_token::id(),
-        &mint_account.pubkey(),
-        &payer.pubkey(),
-        Some(&payer.pubkey()),
-        env.token_decimals,
-    )?;
-
-    // Create the associated token account for the payer
-    let ata = get_associated_token_address(&payer.pubkey(), &mint_account.pubkey());
-    
-    let create_ata_ix = spl_associated_token_account::instruction::create_associated_token_account(
-        &payer.pubkey(),
-        &payer.pubkey(),
-        &mint_account.pubkey(),
-    );
-
-    // Create metadata account
+    // Create metadata
     let (metadata_account, _) = Pubkey::find_program_address(
         &[
             b"metadata",
-            TOKEN_METADATA_PROGRAM_ID.as_ref(),
+            mpl_token_metadata::ID.as_ref(),
             mint_account.pubkey().as_ref(),
         ],
-        &TOKEN_METADATA_PROGRAM_ID,
+        &mpl_token_metadata::ID,
     );
 
-    let metadata_data = Data {
+    let metadata = DataV2 {
         name: env.token_name.clone(),
         symbol: env.token_symbol.clone(),
         uri: env.token_uri.clone(),
         seller_fee_basis_points: 0,
         creators: None,
+        collection: None,
+        uses: None,
     };
 
-    let create_metadata_accounts_ix = token_metadata_instruction::create_metadata_accounts_v3(
-        TOKEN_METADATA_PROGRAM_ID,
-        metadata_account,
-        mint_account.pubkey(),
-        payer.pubkey(),
-        payer.pubkey(),
-        payer.pubkey(),
-        metadata_data.name,
-        metadata_data.symbol,
-        metadata_data.uri,
-        None,
-        0,
-        true,
-        true,  // Is mutable
-        None,  // Collection
-        None,  // Uses
-        None,  // Collection Details
+    instructions.push(
+        token_metadata_instruction::CreateMetadataAccountV3 {
+            metadata: metadata_account,
+            mint: mint_account.pubkey(),
+            mint_authority: payer.pubkey(),
+            payer: payer.pubkey(),
+            update_authority: payer.pubkey(),
+            data: metadata,
+            is_mutable: true,
+            collection_details: None,
+            rule_set: None,
+        }.instruction(),
     );
 
-    // Build and send transaction
-    let recent_blockhash = client
-        .get_latest_blockhash()
-        .map_err(|e| format!("Failed to get recent blockhash: {}", e))?;
+    // Add mint instruction if initial supply > 0
+    if env.initial_supply > 0 {
+        instructions.push(
+            spl_token::instruction::mint_to(
+                &spl_token::id(),
+                &mint_account.pubkey(),
+                &recipient_ata,
+                &payer.pubkey(),
+                &[],
+                env.initial_supply,
+            )?,
+        );
+    }
 
-    let mut transaction = Transaction::new_with_payer(
-        &[
-            create_mint_account_ix,
-            initialize_mint_ix,
-            create_ata_ix,
-            create_metadata_accounts_ix,
-        ],
-        Some(&payer.pubkey()),
-    );
-
+    // Execute transaction
+    let recent_blockhash = client.get_latest_blockhash()?;
+    let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
     transaction.sign(&[&payer, &mint_account], recent_blockhash);
 
-    client
-        .send_and_confirm_transaction(&transaction)
-        .map_err(|e| format!("Failed to send transaction: {}", e))?;
+    let signature = client.send_and_confirm_transaction(&transaction)?;
 
-    println!("Token created successfully!");
+    println!("Token created and minted successfully!");
     println!("Mint Address: {}", mint_account.pubkey());
     println!("Metadata Address: {}", metadata_account);
+    println!("Recipient ATA: {}", recipient_ata);
+    println!("Transaction: {}", signature);
 
     Ok(())
 } 

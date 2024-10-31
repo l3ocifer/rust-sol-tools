@@ -11,25 +11,20 @@ pub fn App() -> impl IntoView {
     view! {
         <Stylesheet id="leptos" href="/pkg/sol-tools.css"/>
         <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
-        <Title text="Solana Tools - Token Creation & Management"/>
+        <Title text="Token Tools"/>
 
         <WalletProvider>
             <Router>
                 <main>
                     <nav class="header">
-                        <h1>"Solana Tools"</h1>
-                        <div class="nav-links">
-                            <A href="/">"Home"</A>
-                            <A href="/create">"Create Token"</A>
-                            <A href="/mint">"Mint Tokens"</A>
-                            <WalletConnect/>
-                        </div>
+                        <h1>"Token Tools"</h1>
+                        <WalletConnect/>
                     </nav>
 
                     <Routes>
                         <Route path="/" view=HomePage/>
                         <Route path="/create" view=CreateTokenPage/>
-                        <Route path="/mint" view=MintTokenPage/>
+                        <Route path="/send" view=SendTokenPage/>
                     </Routes>
                 </main>
             </Router>
@@ -41,20 +36,18 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     view! {
         <div class="container">
-            <h2>"Welcome to Solana Tools"</h2>
-            <p>"A suite of tools for creating and managing Solana tokens."</p>
-            
+            <h2>"Token Management"</h2>
             <div class="features">
                 <div class="feature-card">
                     <h3>"Create Token"</h3>
-                    <p>"Create new SPL tokens with custom metadata"</p>
-                    <A href="/create" class="button">"Get Started"</A>
+                    <p>"Create new token with metadata"</p>
+                    <A href="/create" class="button">"Create"</A>
                 </div>
                 
                 <div class="feature-card">
-                    <h3>"Mint Tokens"</h3>
-                    <p>"Mint additional tokens to any wallet"</p>
-                    <A href="/mint" class="button">"Start Minting"</A>
+                    <h3>"Send Token"</h3>
+                    <p>"Send tokens to any address"</p>
+                    <A href="/send" class="button">"Send"</A>
                 </div>
             </div>
         </div>
@@ -67,7 +60,7 @@ fn CreateTokenPage() -> impl IntoView {
     let (token_name, set_token_name) = create_signal(String::new());
     let (token_symbol, set_token_symbol) = create_signal(String::new());
     let (token_uri, set_token_uri) = create_signal(String::new());
-    let (_decimals, set_decimals) = create_signal(9u8);
+    let (initial_supply, set_initial_supply) = create_signal(1_000_000_000u64);
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
@@ -75,12 +68,18 @@ fn CreateTokenPage() -> impl IntoView {
             logging::warn!("Please connect your wallet first");
             return;
         }
-        logging::log!("Creating token: {} {} {}", token_name.get(), token_symbol.get(), token_uri.get());
+        logging::log!(
+            "Creating token: {} {} {} supply: {}", 
+            token_name.get(), 
+            token_symbol.get(), 
+            token_uri.get(),
+            initial_supply.get(),
+        );
     };
 
     view! {
         <div class="container">
-            <h2>"Create New SPL Token"</h2>
+            <h2>"Create New Token"</h2>
             
             <form class="token-form" on:submit=on_submit>
                 <div class="form-group">
@@ -88,6 +87,7 @@ fn CreateTokenPage() -> impl IntoView {
                     <input
                         type="text"
                         id="token_name"
+                        required
                         placeholder="Enter token name"
                         on:input=move |ev| {
                             set_token_name.set(event_target_value(&ev));
@@ -100,6 +100,7 @@ fn CreateTokenPage() -> impl IntoView {
                     <input
                         type="text"
                         id="token_symbol"
+                        required
                         placeholder="Enter token symbol"
                         on:input=move |ev| {
                             set_token_symbol.set(event_target_value(&ev));
@@ -108,10 +109,11 @@ fn CreateTokenPage() -> impl IntoView {
                 </div>
 
                 <div class="form-group">
-                    <label for="token_uri">"Token URI"</label>
+                    <label for="token_uri">"Metadata URI"</label>
                     <input
-                        type="text"
+                        type="url"
                         id="token_uri"
+                        required
                         placeholder="Enter metadata URI"
                         on:input=move |ev| {
                             set_token_uri.set(event_target_value(&ev));
@@ -120,16 +122,16 @@ fn CreateTokenPage() -> impl IntoView {
                 </div>
 
                 <div class="form-group">
-                    <label for="decimals">"Decimals"</label>
+                    <label for="initial_supply">"Initial Supply"</label>
                     <input
                         type="number"
-                        id="decimals"
+                        id="initial_supply"
                         min="0"
-                        max="9"
-                        value="9"
+                        required
+                        value="1000000000"
                         on:input=move |ev| {
                             if let Ok(value) = event_target_value(&ev).parse() {
-                                set_decimals.set(value);
+                                set_initial_supply.set(value);
                             }
                         }
                     />
@@ -139,7 +141,7 @@ fn CreateTokenPage() -> impl IntoView {
                     {move || if wallet_ctx.state.get().connected {
                         "Create Token"
                     } else {
-                        "Connect Wallet to Create"
+                        "Connect Wallet First"
                     }}
                 </button>
             </form>
@@ -148,10 +150,10 @@ fn CreateTokenPage() -> impl IntoView {
 }
 
 #[component]
-fn MintTokenPage() -> impl IntoView {
+fn SendTokenPage() -> impl IntoView {
     let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
-    let (mint_address, set_mint_address) = create_signal(String::new());
-    let (receiver_address, set_receiver_address) = create_signal(String::new());
+    let (token_address, set_token_address) = create_signal(String::new());
+    let (recipient_address, set_recipient_address) = create_signal(String::new());
     let (amount, set_amount) = create_signal(0u64);
 
     let on_submit = move |ev: SubmitEvent| {
@@ -160,38 +162,41 @@ fn MintTokenPage() -> impl IntoView {
             logging::warn!("Please connect your wallet first");
             return;
         }
-        logging::log!("Minting {} tokens to {} from mint {}", 
-            amount.get(), 
-            receiver_address.get(), 
-            mint_address.get()
+        logging::log!(
+            "Sending {} tokens to {} from {}", 
+            amount.get(),
+            recipient_address.get(),
+            token_address.get()
         );
     };
 
     view! {
         <div class="container">
-            <h2>"Mint SPL Tokens"</h2>
+            <h2>"Send Tokens"</h2>
             
             <form class="token-form" on:submit=on_submit>
                 <div class="form-group">
-                    <label for="mint_address">"Token Mint Address"</label>
+                    <label for="token_address">"Token Address"</label>
                     <input
                         type="text"
-                        id="mint_address"
-                        placeholder="Enter token mint address"
+                        id="token_address"
+                        required
+                        placeholder="Enter token address"
                         on:input=move |ev| {
-                            set_mint_address.set(event_target_value(&ev));
+                            set_token_address.set(event_target_value(&ev));
                         }
                     />
                 </div>
 
                 <div class="form-group">
-                    <label for="receiver_address">"Receiver Address"</label>
+                    <label for="recipient_address">"Recipient Address"</label>
                     <input
                         type="text"
-                        id="receiver_address"
-                        placeholder="Enter receiver's wallet address"
+                        id="recipient_address"
+                        required
+                        placeholder="Enter recipient address"
                         on:input=move |ev| {
-                            set_receiver_address.set(event_target_value(&ev));
+                            set_recipient_address.set(event_target_value(&ev));
                         }
                     />
                 </div>
@@ -202,7 +207,8 @@ fn MintTokenPage() -> impl IntoView {
                         type="number"
                         id="amount"
                         min="1"
-                        placeholder="Enter amount to mint"
+                        required
+                        placeholder="Enter amount to send"
                         on:input=move |ev| {
                             if let Ok(value) = event_target_value(&ev).parse() {
                                 set_amount.set(value);
@@ -213,9 +219,9 @@ fn MintTokenPage() -> impl IntoView {
 
                 <button type="submit" class="button">
                     {move || if wallet_ctx.state.get().connected {
-                        "Mint Tokens"
+                        "Send Tokens"
                     } else {
-                        "Connect Wallet to Mint"
+                        "Connect Wallet First"
                     }}
                 </button>
             </form>
@@ -227,28 +233,52 @@ fn MintTokenPage() -> impl IntoView {
 fn WalletConnect() -> impl IntoView {
     let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
     let state = wallet_ctx.state;
-
-    let connect_phantom = move |_| wallet_ctx.connect(WalletType::Phantom);
-    let connect_metamask = move |_| wallet_ctx.connect(WalletType::MetaMask);
-    let disconnect = move |_| wallet_ctx.disconnect();
+    
+    let wallet_ctx_phantom = wallet_ctx.clone();
+    let connect_phantom = create_action(move |_: &()| {
+        let ctx = wallet_ctx_phantom.clone();
+        async move {
+            ctx.connect(WalletType::Phantom).await;
+        }
+    });
+    
+    let wallet_ctx_metamask = wallet_ctx.clone();
+    let connect_metamask = create_action(move |_: &()| {
+        let ctx = wallet_ctx_metamask.clone();
+        async move {
+            ctx.connect(WalletType::MetaMask).await;
+        }
+    });
+    
+    let wallet_ctx_disconnect = wallet_ctx.clone();
+    let disconnect = create_action(move |_: &()| {
+        let ctx = wallet_ctx_disconnect.clone();
+        async move {
+            ctx.disconnect().await;
+        }
+    });
 
     view! {
         <div class="wallet-connect">
-            {move || {
-                if state.get().connected {
-                    view! {
-                        <div class="wallet-info">
-                            <span class="wallet-address">{state.get().address.unwrap_or_default()}</span>
-                            <button class="button" on:click=disconnect>"Disconnect"</button>
-                        </div>
-                    }
-                } else {
-                    view! {
-                        <div class="wallet-buttons">
-                            <button class="button" on:click=connect_phantom>"Connect Phantom"</button>
-                            <button class="button" on:click=connect_metamask>"Connect MetaMask"</button>
-                        </div>
-                    }
+            {move || if state.get().connected {
+                view! {
+                    <div class="wallet-info">
+                        <span class="wallet-address">{state.get().address.unwrap_or_default()}</span>
+                        <button class="button" on:click=move |_| disconnect.dispatch(())>
+                            "Disconnect"
+                        </button>
+                    </div>
+                }
+            } else {
+                view! {
+                    <div class="wallet-buttons">
+                        <button class="button" on:click=move |_| connect_phantom.dispatch(())>
+                            "Connect Phantom"
+                        </button>
+                        <button class="button" on:click=move |_| connect_metamask.dispatch(())>
+                            "Connect MetaMask"
+                        </button>
+                    </div>
                 }
             }}
         </div>

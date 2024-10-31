@@ -1,7 +1,6 @@
 use leptos::*;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
-use gloo_utils::format::JsValueSerdeExt;
+use wasm_bindgen::JsCast;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WalletState {
@@ -24,42 +23,33 @@ pub struct WalletContext {
 
 impl WalletContext {
     fn load_stored_state() -> Option<WalletState> {
-        if let Some(window) = web_sys::window() {
-            if let Some(storage) = window.local_storage().ok()? {
-                if let Some(data) = storage.get_item("wallet_state").ok()? {
-                    return serde_json::from_str(&data).ok();
-                }
-            }
+        #[cfg(target_arch = "wasm32")]
+        {
+            web_sys::window()?.local_storage().ok()?
+                .and_then(|storage| storage.get_item("wallet_state").ok()?)
+                .and_then(|data| serde_json::from_str(&data).ok())
         }
-        None
-    }
-
-    fn save_state(&self, state: &WalletState) {
-        if let Some(window) = web_sys::window() {
-            if let Some(storage) = window.local_storage().ok() {
-                if let Ok(data) = serde_json::to_string(state) {
-                    let _ = storage.set_item("wallet_state", &data);
-                }
-            }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            None
         }
     }
 
-    pub fn connect(&self, wallet_type: WalletType) {
-        let window = web_sys::window().unwrap();
-        let set_state = self.set_state;
-        let this = self.clone();
-        
-        match wallet_type {
-            WalletType::Phantom => {
-                if let Some(solana) = window.get("solana") {
-                    wasm_bindgen_futures::spawn_local(async move {
+    pub async fn connect(&self, wallet_type: WalletType) {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let window = web_sys::window().unwrap();
+            let set_state = self.set_state;
+            
+            match wallet_type {
+                WalletType::Phantom => {
+                    if let Some(solana) = window.get("solana") {
                         let connect_result = js_sys::Reflect::get(&solana, &"connect".into())
-                            .unwrap()
-                            .dyn_into::<js_sys::Function>()
-                            .unwrap()
-                            .call0(&solana);
+                            .ok()
+                            .and_then(|connect| connect.dyn_into::<js_sys::Function>().ok())
+                            .and_then(|func| func.call0(&solana).ok());
                             
-                        if let Ok(_) = connect_result {
+                        if connect_result.is_some() {
                             let new_state = WalletState {
                                 connected: true,
                                 wallet_type: Some(WalletType::Phantom),
@@ -67,54 +57,51 @@ impl WalletContext {
                                     .ok()
                                     .and_then(|key| key.as_string()),
                             };
-                            set_state.set(new_state.clone());
-                            this.save_state(&new_state);
+                            set_state.set(new_state);
                         }
-                    });
-                }
-            },
-            WalletType::MetaMask => {
-                if let Some(ethereum) = window.get("ethereum") {
-                    wasm_bindgen_futures::spawn_local(async move {
+                    }
+                },
+                WalletType::MetaMask => {
+                    if let Some(ethereum) = window.get("ethereum") {
                         let request_value = js_sys::Object::new();
-                        js_sys::Reflect::set(
+                        let _ = js_sys::Reflect::set(
                             &request_value,
                             &"method".into(),
                             &"eth_requestAccounts".into(),
-                        ).unwrap();
+                        );
 
-                        let accounts = js_sys::Reflect::get(&ethereum, &"request".into())
-                            .unwrap()
-                            .dyn_into::<js_sys::Function>()
-                            .unwrap()
-                            .call1(&ethereum, &request_value);
+                        if let Some(request) = js_sys::Reflect::get(&ethereum, &"request".into())
+                            .ok()
+                            .and_then(|req| req.dyn_into::<js_sys::Function>().ok())
+                            .and_then(|func| func.call1(&ethereum, &request_value).ok()) {
                             
-                        if let Ok(accounts) = accounts {
-                            if let Some(first_account) = js_sys::Reflect::get(&accounts, &0.into()).ok() {
+                            if let Some(first_account) = js_sys::Reflect::get(&request, &0.into()).ok() {
                                 let new_state = WalletState {
                                     connected: true,
                                     wallet_type: Some(WalletType::MetaMask),
-                                    address: Some(first_account.as_string().unwrap()),
+                                    address: first_account.as_string(),
                                 };
-                                set_state.set(new_state.clone());
-                                self.save_state(&new_state);
+                                set_state.set(new_state);
                             }
                         }
-                    });
+                    }
                 }
             }
         }
     }
 
-    pub fn disconnect(&self) {
+    pub async fn disconnect(&self) {
         self.set_state.update(|state| {
             state.connected = false;
             state.address = None;
             state.wallet_type = None;
         });
-        if let Some(window) = web_sys::window() {
-            if let Some(storage) = window.local_storage().ok() {
-                let _ = storage.remove_item("wallet_state");
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let Some(window) = web_sys::window() {
+                if let Some(storage) = window.local_storage().ok().flatten() {
+                    let _ = storage.remove_item("wallet_state");
+                }
             }
         }
     }
@@ -130,12 +117,10 @@ pub fn WalletProvider(children: Children) -> impl IntoView {
     
     let (state, set_state) = create_signal(initial_state);
     
-    provide_context(
-        WalletContext {
-            state,
-            set_state,
-        }
-    );
+    provide_context(WalletContext {
+        state,
+        set_state,
+    });
     
-    view! { {children()} }
+    children()
 } 

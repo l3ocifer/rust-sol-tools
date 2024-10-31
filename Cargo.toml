@@ -38,8 +38,8 @@ solana-program = "1.17"
 solana-sdk = "1.17"
 spl-token = { version = "4.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "2.2", features = ["no-entrypoint"] }
-mpl-token-metadata = { version = "1.13", features = ["no-entrypoint"] }
-borsh = "0.10"
+mpl-token-metadata = "2.0.0"
+borsh = "1.2.0"
 url = "2.5"
 envy = "0.4"
 libc = { version = "0.2", features = ["extra_traits", "use_std"] }
