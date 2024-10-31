@@ -21,7 +21,8 @@ struct Env {
     token_uri: String,
     token_decimals: u8,
     initial_supply: u64,
-    recipient_address: Option<String>, // Optional recipient, defaults to creator if None
+    recipient_address: Option<String>,
+    sample_amount: Option<u64>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -44,6 +45,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         payer.pubkey()
     };
+
+    // Calculate amounts with decimal adjustment
+    let decimals_multiplier = 10u64.pow(env.token_decimals as u32);
+    let initial_supply = env.initial_supply.saturating_mul(decimals_multiplier);
+    let sample_amount = env.sample_amount.unwrap_or(1000).saturating_mul(decimals_multiplier);
 
     // Create all necessary instructions
     let mut instructions = vec![
@@ -74,6 +80,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &mint_account.pubkey(),
         ),
     );
+
+    // Add mint instructions
+    if initial_supply > 0 {
+        instructions.push(
+            spl_token::instruction::mint_to(
+                &spl_token::id(),
+                &mint_account.pubkey(),
+                &recipient_ata,
+                &payer.pubkey(),
+                &[],
+                initial_supply,
+            )?,
+        );
+    }
+
+    // Add sample amount mint instruction if different from initial supply
+    if sample_amount > 0 && sample_amount != initial_supply {
+        instructions.push(
+            spl_token::instruction::mint_to(
+                &spl_token::id(),
+                &mint_account.pubkey(),
+                &recipient_ata,
+                &payer.pubkey(),
+                &[],
+                sample_amount,
+            )?,
+        );
+    }
 
     // Create metadata
     let (metadata_account, _) = Pubkey::find_program_address(
@@ -109,20 +143,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }.instruction(),
     );
 
-    // Add mint instruction if initial supply > 0
-    if env.initial_supply > 0 {
-        instructions.push(
-            spl_token::instruction::mint_to(
-                &spl_token::id(),
-                &mint_account.pubkey(),
-                &recipient_ata,
-                &payer.pubkey(),
-                &[],
-                env.initial_supply,
-            )?,
-        );
-    }
-
     // Execute transaction
     let recent_blockhash = client.get_latest_blockhash()?;
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
@@ -135,6 +155,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Metadata Address: {}", metadata_account);
     println!("Recipient ATA: {}", recipient_ata);
     println!("Transaction: {}", signature);
+    println!("Initial Supply: {} tokens", initial_supply);
+    if sample_amount > 0 && sample_amount != initial_supply {
+        println!("Sample Amount: {} tokens", sample_amount);
+    }
 
     Ok(())
 } 
