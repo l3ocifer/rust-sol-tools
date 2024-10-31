@@ -60,7 +60,12 @@ fn CreateTokenPage() -> impl IntoView {
     let (token_name, set_token_name) = create_signal(String::new());
     let (token_symbol, set_token_symbol) = create_signal(String::new());
     let (token_uri, set_token_uri) = create_signal(String::new());
+    let (decimals, set_decimals) = create_signal(9u8);
     let (initial_supply, set_initial_supply) = create_signal(1_000_000_000u64);
+    let (is_mutable, set_is_mutable) = create_signal(true);
+    let (freeze_authority, set_freeze_authority) = create_signal(true);
+    let (seller_fee_basis_points, set_seller_fee_basis_points) = create_signal(0u16);
+    let (max_supply, set_max_supply) = create_signal(None::<u64>);
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
@@ -69,11 +74,16 @@ fn CreateTokenPage() -> impl IntoView {
             return;
         }
         logging::log!(
-            "Creating token: {} {} {} supply: {}", 
+            "Creating token: {} {} {} decimals: {} supply: {} mutable: {} freeze: {} fee: {} max_supply: {:?}", 
             token_name.get(), 
             token_symbol.get(), 
             token_uri.get(),
+            decimals.get(),
             initial_supply.get(),
+            is_mutable.get(),
+            freeze_authority.get(),
+            seller_fee_basis_points.get(),
+            max_supply.get(),
         );
     };
 
@@ -122,6 +132,23 @@ fn CreateTokenPage() -> impl IntoView {
                 </div>
 
                 <div class="form-group">
+                    <label for="decimals">"Decimals (0-9)"</label>
+                    <input
+                        type="number"
+                        id="decimals"
+                        min="0"
+                        max="9"
+                        required
+                        value="9"
+                        on:input=move |ev| {
+                            if let Ok(value) = event_target_value(&ev).parse() {
+                                set_decimals.set(value);
+                            }
+                        }
+                    />
+                </div>
+
+                <div class="form-group">
                     <label for="initial_supply">"Initial Supply"</label>
                     <input
                         type="number"
@@ -135,6 +162,67 @@ fn CreateTokenPage() -> impl IntoView {
                             }
                         }
                     />
+                </div>
+
+                <div class="form-group">
+                    <label for="max_supply">"Maximum Supply (optional)"</label>
+                    <input
+                        type="number"
+                        id="max_supply"
+                        min="0"
+                        placeholder="Leave empty for unlimited"
+                        on:input=move |ev| {
+                            let value = event_target_value(&ev);
+                            if value.is_empty() {
+                                set_max_supply.set(None);
+                            } else if let Ok(num) = value.parse() {
+                                set_max_supply.set(Some(num));
+                            }
+                        }
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="seller_fee">"Seller Fee Basis Points (0-10000)"</label>
+                    <input
+                        type="number"
+                        id="seller_fee"
+                        min="0"
+                        max="10000"
+                        value="0"
+                        required
+                        on:input=move |ev| {
+                            if let Ok(value) = event_target_value(&ev).parse() {
+                                set_seller_fee_basis_points.set(value);
+                            }
+                        }
+                    />
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked=true
+                            on:change=move |ev| {
+                                set_is_mutable.set(event_target_checked(&ev));
+                            }
+                        />
+                        "Token metadata is mutable"
+                    </label>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked=true
+                            on:change=move |ev| {
+                                set_freeze_authority.set(event_target_checked(&ev));
+                            }
+                        />
+                        "Enable freeze authority"
+                    </label>
                 </div>
 
                 <button type="submit" class="button">
