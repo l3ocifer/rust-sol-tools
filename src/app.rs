@@ -1,9 +1,10 @@
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use web_sys::SubmitEvent;
+use web_sys::{File, Event, SubmitEvent, HtmlInputElement};
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
-use web_sys::{File, FileList, HtmlInputElement};
+use crate::upload::{upload_image, upload_metadata};
+use serde_json::json;
 use wasm_bindgen::JsCast;
 
 #[derive(Clone, Debug)]
@@ -34,8 +35,11 @@ pub fn App() -> impl IntoView {
             <Router>
                 <main>
                     <nav class="header">
-                        <h1>"Token Tools"</h1>
-                        <WalletConnect/>
+                        <div class="header-content">
+                            <A href="/" class="home-link">"🏠 Home"</A>
+                            <h1>"Token Tools"</h1>
+                            <WalletConnect/>
+                        </div>
                     </nav>
 
                     <Routes>

@@ -35,13 +35,13 @@ impl WalletContext {
         }
     }
 
-    pub async fn connect(&self, wallet_type: WalletType) {
+    pub async fn connect(&self, _wallet_type: WalletType) {
         #[cfg(target_arch = "wasm32")]
         {
             let window = web_sys::window().unwrap();
             let set_state = self.set_state;
             
-            match wallet_type {
+            match _wallet_type {
                 WalletType::Phantom => {
                     if let Some(solana) = window.get("solana") {
                         let connect_result = js_sys::Reflect::get(&solana, &"connect".into())

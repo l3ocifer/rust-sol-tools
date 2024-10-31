@@ -1,5 +1,6 @@
 pub mod app;
 pub mod wallet;
+pub mod upload;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
