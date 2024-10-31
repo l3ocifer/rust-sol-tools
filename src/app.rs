@@ -1,12 +1,9 @@
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use web_sys::{File, Event, SubmitEvent, HtmlInputElement};
+use web_sys::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
-use crate::upload::{upload_image, upload_metadata};
 use crate::token::{create_token, CreateTokenParams};
-use serde_json::json;
-use wasm_bindgen::JsCast;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -77,15 +74,6 @@ fn CreateTokenPage() -> impl IntoView {
     let (success, set_success) = create_signal(Option::<String>::None);
     let (status, set_status) = create_signal(String::new());
 
-    let handle_image_upload = move |ev: Event| {
-        let input: HtmlInputElement = ev.target().unwrap().unchecked_into();
-        if let Some(files) = input.files() {
-            if let Some(file) = files.get(0) {
-                set_token_image.set(Some(file));
-            }
-        }
-    };
-
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         
@@ -135,50 +123,7 @@ fn CreateTokenPage() -> impl IntoView {
         <div class="container">
             <h2>"Create New Token"</h2>
             
-            <form class="token-form" on:submit=move |ev| {
-                ev.prevent_default();
-                
-                if !wallet_ctx.state.get_untracked().connected {
-                    set_error.set(Some("Please connect your wallet first".to_string()));
-                    return;
-                }
-
-                set_loading.set(true);
-                set_error.set(None);
-                set_success.set(None);
-
-                spawn_local(async move {
-                    let params = CreateTokenParams {
-                        name: token_name.get_untracked(),
-                        symbol: token_symbol.get_untracked(),
-                        description: token_description.get_untracked(),
-                        metadata_uri: metadata_uri.get_untracked(),
-                        decimals: decimals.get_untracked(),
-                        initial_supply: initial_supply.get_untracked(),
-                        is_mutable: is_mutable.get_untracked(),
-                        freeze_authority: freeze_authority.get_untracked(),
-                    };
-
-                    match create_token(params).await {
-                        Ok(result) => {
-                            set_status.set(result.status);
-                            set_success.set(Some(format!(
-                                "Token created successfully!\n\
-                                 Mint Address: {}\n\
-                                 View on Solscan: {}\n\
-                                 Transaction: {}",
-                                result.mint,
-                                result.explorer_url,
-                                result.signature
-                            )));
-                        }
-                        Err(e) => {
-                            set_error.set(Some(format!("Failed to create token: {}", e)));
-                        }
-                    }
-                    set_loading.set(false);
-                });
-            }>
+            <form class="token-form" on:submit=on_submit>
                 <div class="form-group">
                     <label for="token_name">"Token Name"</label>
                     <input
@@ -224,22 +169,8 @@ fn CreateTokenPage() -> impl IntoView {
                         id="metadata_uri"
                         placeholder="Enter metadata URI from Pinata or similar service"
                         on:input=move |ev| {
-                            let uri = event_target_value(&ev);
-                            set_metadata_uri.set(uri.clone());
-                            if !uri.is_empty() {
-                                set_token_image.set(None);
-                            }
+                            set_metadata_uri.set(event_target_value(&ev));
                         }
-                    />
-                </div>
-
-                <div class="form-group" class:hidden=move || !metadata_uri.get().is_empty()>
-                    <label for="token_image">"Token Image"</label>
-                    <input
-                        type="file"
-                        id="token_image"
-                        accept="image/*"
-                        on:change=handle_image_upload
                     />
                 </div>
 

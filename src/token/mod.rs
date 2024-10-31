@@ -1,6 +1,8 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 use anyhow::{Result, anyhow};
+use std::str::FromStr;
+use solana_program::pubkey::Pubkey;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateTokenParams {
@@ -32,11 +34,20 @@ extern "C" {
 }
 
 pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult> {
+    let _ = update_status("Initializing token creation...");
+    
+    // Validate parameters
+    if params.decimals > 9 {
+        return Err(anyhow!("Decimals must be between 0 and 9"));
+    }
+    
+    if params.initial_supply == 0 {
+        return Err(anyhow!("Initial supply must be greater than 0"));
+    }
+
     let js_params = serde_wasm_bindgen::to_value(&params)
         .map_err(|e| anyhow!("Failed to serialize params: {}", e))?;
 
-    update_status("Initializing token creation...");
-    
     let promise = solana_request("createToken", js_params);
     let result = wasm_bindgen_futures::JsFuture::from(promise).await
         .map_err(|e| anyhow!("Failed to create token: {:?}", e))?;
@@ -44,6 +55,11 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
     let result: TokenCreationResult = serde_wasm_bindgen::from_value(result)
         .map_err(|e| anyhow!("Failed to parse response: {}", e))?;
 
-    update_status(&result.status);
+    // Validate mint address
+    if Pubkey::from_str(&result.mint).is_err() {
+        return Err(anyhow!("Invalid mint address returned"));
+    }
+
+    let _ = update_status(&result.status);
     Ok(result)
 } 
