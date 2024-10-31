@@ -1,12 +1,14 @@
+// Initialize window functions immediately
 if (typeof window !== 'undefined') {
+    // Ensure function is defined before WASM loads
     window.update_status = function(status) {
         console.log("Status:", status);
-        // Optional: Update UI status element if it exists
         const statusElement = document.getElementById('creation-status');
         if (statusElement) {
             statusElement.textContent = status;
         }
-    }
+        return true; // Return value for wasm binding
+    };
 }
 
 window.solana_request = async function(method, params) {
