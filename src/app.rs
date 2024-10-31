@@ -90,6 +90,9 @@ fn CreateTokenPage() -> impl IntoView {
     let (seller_fee_basis_points, set_seller_fee_basis_points) = create_signal(0u16);
     let (max_supply, set_max_supply) = create_signal(None::<u64>);
     let (metadata_uri, set_metadata_uri) = create_signal(String::new());
+    let (loading, set_loading) = create_signal(false);
+    let (error, set_error) = create_signal(Option::<String>::None);
+    let (success, set_success) = create_signal(Option::<String>::None);
 
     let handle_image_upload = move |ev: Event| {
         let input: HtmlInputElement = ev.target().unwrap().unchecked_into();
@@ -104,9 +107,13 @@ fn CreateTokenPage() -> impl IntoView {
         ev.prevent_default();
         
         if !wallet_ctx.state.get().connected {
-            logging::warn!("Please connect your wallet first");
+            set_error.set(Some("Please connect your wallet first".to_string()));
             return;
         }
+
+        set_loading.set(true);
+        set_error.set(None);
+        set_success.set(None);
 
         // Upload image and create metadata
         spawn_local(async move {
@@ -114,32 +121,49 @@ fn CreateTokenPage() -> impl IntoView {
                 uri
             } else if let Some(image_file) = token_image.get() {
                 // Upload image to Arweave/IPFS
-                let image_url = upload_image(image_file).await.unwrap_or_default();
-                
-                // Create and upload metadata
-                let metadata = json!({
-                    "name": token_name.get(),
-                    "symbol": token_symbol.get(),
-                    "description": token_description.get(),
-                    "image": image_url,
-                    "attributes": [],
-                    "properties": {
-                        "files": [{
-                            "uri": image_url,
-                            "type": "image/png"
-                        }]
-                    }
-                });
+                match upload_image(image_file).await {
+                    Ok(image_url) => {
+                        // Create and upload metadata
+                        let metadata = json!({
+                            "name": token_name.get(),
+                            "symbol": token_symbol.get(),
+                            "description": token_description.get(),
+                            "image": image_url,
+                            "attributes": [],
+                            "properties": {
+                                "files": [{
+                                    "uri": image_url,
+                                    "type": "image/png"
+                                }]
+                            }
+                        });
 
-                // Upload metadata to Arweave/IPFS
-                upload_metadata(metadata).await.unwrap_or_default()
+                        // Upload metadata to Arweave/IPFS
+                        match upload_metadata(metadata).await {
+                            Ok(url) => url,
+                            Err(e) => {
+                                set_error.set(Some(format!("Failed to upload metadata: {}", e)));
+                                set_loading.set(false);
+                                return;
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        set_error.set(Some(format!("Failed to upload image: {}", e)));
+                        set_loading.set(false);
+                        return;
+                    }
+                }
             } else {
-                logging::warn!("Either metadata URI or image file is required");
+                set_error.set(Some("Either metadata URI or image file is required".to_string()));
+                set_loading.set(false);
                 return;
             };
 
             // Continue with token creation using metadata_url
             logging::log!("Token metadata URL: {}", metadata_url);
+            set_success.set(Some("Token created successfully!".to_string()));
+            set_loading.set(false);
         });
     };
 
@@ -187,12 +211,12 @@ fn CreateTokenPage() -> impl IntoView {
                 </div>
 
                 <div class="form-group">
-                    <label for="token_image">"Token Image"</label>
+                    <label for="token_image">"Token Image (Required if no Metadata URI)"</label>
                     <input
                         type="file"
                         id="token_image"
                         accept="image/*"
-                        required
+                        required=move || metadata_uri.get().is_empty()
                         on:change=handle_image_upload
                     />
                 </div>
@@ -303,8 +327,26 @@ fn CreateTokenPage() -> impl IntoView {
                     />
                 </div>
 
-                <button type="submit" class="button">
-                    {move || if wallet_ctx.state.get().connected {
+                {move || error.get().map(|err| view! {
+                    <div class="error-message">
+                        {err}
+                    </div>
+                })}
+
+                {move || success.get().map(|msg| view! {
+                    <div class="success-message">
+                        {msg}
+                    </div>
+                })}
+
+                <button 
+                    type="submit" 
+                    class="button"
+                    disabled=move || loading.get()
+                >
+                    {move || if loading.get() {
+                        "Creating Token..."
+                    } else if wallet_ctx.state.get().connected {
                         "Create Token"
                     } else {
                         "Connect Wallet First"
