@@ -88,6 +88,7 @@ fn CreateTokenPage() -> impl IntoView {
     let (freeze_authority, set_freeze_authority) = create_signal(true);
     let (seller_fee_basis_points, set_seller_fee_basis_points) = create_signal(0u16);
     let (max_supply, set_max_supply) = create_signal(None::<u64>);
+    let (metadata_uri, set_metadata_uri) = create_signal(String::new());
 
     let handle_image_upload = move |ev: Event| {
         let input: HtmlInputElement = ev.target().unwrap().unchecked_into();
@@ -100,6 +101,7 @@ fn CreateTokenPage() -> impl IntoView {
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
+        
         if !wallet_ctx.state.get().connected {
             logging::warn!("Please connect your wallet first");
             return;
@@ -107,8 +109,10 @@ fn CreateTokenPage() -> impl IntoView {
 
         // Upload image and create metadata
         spawn_local(async move {
-            if let Some(image_file) = token_image.get() {
-                // Upload image to Arweave/IPFS (implementation needed)
+            let metadata_url = if let Some(uri) = metadata_uri.get().is_empty().not().then(|| metadata_uri.get()) {
+                uri
+            } else if let Some(image_file) = token_image.get() {
+                // Upload image to Arweave/IPFS
                 let image_url = upload_image(image_file).await.unwrap_or_default();
                 
                 // Create and upload metadata
@@ -126,12 +130,15 @@ fn CreateTokenPage() -> impl IntoView {
                     }
                 });
 
-                // Upload metadata to Arweave/IPFS (implementation needed)
-                let metadata_url = upload_metadata(metadata).await.unwrap_or_default();
+                // Upload metadata to Arweave/IPFS
+                upload_metadata(metadata).await.unwrap_or_default()
+            } else {
+                logging::warn!("Either metadata URI or image file is required");
+                return;
+            };
 
-                // Continue with token creation using metadata_url
-                logging::log!("Token metadata uploaded: {}", metadata_url);
-            }
+            // Continue with token creation using metadata_url
+            logging::log!("Token metadata URL: {}", metadata_url);
         });
     };
 
@@ -281,6 +288,18 @@ fn CreateTokenPage() -> impl IntoView {
                         />
                         "Enable freeze authority"
                     </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="metadata_uri">"Metadata URI (Optional)"</label>
+                    <input
+                        type="text"
+                        id="metadata_uri"
+                        placeholder="Enter metadata URI from Pinata or similar service"
+                        on:input=move |ev| {
+                            set_metadata_uri.set(event_target_value(&ev));
+                        }
+                    />
                 </div>
 
                 <button type="submit" class="button">
