@@ -1,16 +1,4 @@
 // Initialize window functions immediately
-if (typeof window !== 'undefined') {
-    // Ensure function is defined before WASM loads
-    window.update_status = function(status) {
-        console.log("Status:", status);
-        const statusElement = document.getElementById('creation-status');
-        if (statusElement) {
-            statusElement.textContent = status;
-        }
-        return true; // Return value for wasm binding
-    };
-}
-
 window.solana_request = async function(method, params) {
     if (!window.solana || !window.solana.isPhantom) {
         throw new Error("Phantom wallet not found");
@@ -31,7 +19,6 @@ window.solana_request = async function(method, params) {
             switch (method) {
                 case "createToken": {
                     // Create mint account
-                    window.update_status("Creating mint account...");
                     const mintAccount = solanaWeb3.Keypair.generate();
                     const mintRent = await connection.getMinimumBalanceForRentExemption(
                         solanaWeb3.MINT_SIZE
@@ -180,7 +167,6 @@ window.solana_request = async function(method, params) {
         } catch (error) {
             console.error("Token creation error:", error);
             if (error?.message?.includes('429') && retries < MAX_RETRIES - 1) {
-                window.update_status(`Rate limit reached. Retrying (${retries + 1}/${MAX_RETRIES})...`);
                 retries++;
                 await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * retries));
                 continue;
@@ -188,4 +174,14 @@ window.solana_request = async function(method, params) {
             throw error;
         }
     }
-} 
+};
+
+// Update status function for WASM
+window.update_status = function(status) {
+    console.log("Status:", status);
+    const statusElement = document.getElementById('creation-status');
+    if (statusElement) {
+        statusElement.textContent = status;
+    }
+    return true;
+}; 

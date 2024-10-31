@@ -11,17 +11,6 @@
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.js"></script>
     <script src="https://unpkg.com/@metaplex-foundation/mpl-token-metadata@latest/lib/index.iife.min.js"></script>
-    <script>
-        // Define window functions before any other scripts
-        window.update_status = function(status) {
-            console.log("Status:", status);
-            const statusElement = document.getElementById('creation-status');
-            if (statusElement) {
-                statusElement.textContent = status;
-            }
-            return true;
-        };
-    </script>
     <script src="/phantom.js"></script>
     <script type="module">
         try {
@@ -29,7 +18,10 @@
             await init().catch(console.error);
         } catch (error) {
             console.error("Initialization error:", error);
-            window.update_status("Failed to initialize application");
+            const statusElement = document.getElementById('creation-status');
+            if (statusElement) {
+                statusElement.textContent = "Failed to initialize application";
+            }
         }
     </script>
 </body>

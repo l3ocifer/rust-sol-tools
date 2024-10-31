@@ -29,12 +29,21 @@ pub struct TokenCreationResult {
 extern "C" {
     #[wasm_bindgen(js_namespace = window)]
     fn solana_request(method: &str, params: JsValue) -> js_sys::Promise;
-    #[wasm_bindgen(js_namespace = window)]
-    fn update_status(status: &str);
+}
+
+pub fn update_status(status: &str) {
+    let window = web_sys::window().expect("no global `window` exists");
+    let status_element = window
+        .document()
+        .expect("should have a document on window")
+        .get_element_by_id("creation-status")
+        .expect("should have creation-status element");
+    
+    status_element.set_text_content(Some(status));
 }
 
 pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult> {
-    let _ = update_status("Initializing token creation...");
+    update_status("Initializing token creation...");
     
     // Validate parameters
     if params.decimals > 9 {
@@ -60,6 +69,6 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
         return Err(anyhow!("Invalid mint address returned"));
     }
 
-    let _ = update_status(&result.status);
+    update_status(&result.status);
     Ok(result)
 } 
