@@ -4,7 +4,7 @@ use leptos_router::*;
 use web_sys::{File, Event, SubmitEvent, HtmlInputElement};
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::upload::{upload_image, upload_metadata};
-use crate::token::create_token;
+use crate::token::{create_token, CreateTokenParams};
 use serde_json::json;
 use wasm_bindgen::JsCast;
 
