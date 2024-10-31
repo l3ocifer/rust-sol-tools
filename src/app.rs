@@ -158,8 +158,16 @@ fn CreateTokenPage() -> impl IntoView {
             }).await;
 
             match result {
-                Ok(signature) => {
-                    set_success.set(Some(format!("Token created successfully! Transaction: {}", signature)));
+                Ok(result) => {
+                    set_success.set(Some(format!(
+                        "Token created successfully!\n\
+                         Mint Address: {}\n\
+                         View on Solscan: {}\n\
+                         Transaction: {}",
+                        result.mint,
+                        result.explorer_url,
+                        result.signature
+                    )));
                 }
                 Err(e) => {
                     set_error.set(Some(format!("Failed to create token: {}", e)));

@@ -75,6 +75,55 @@ window.solana_request = async function(method, params) {
                     )
                 );
 
+                // Create ATA for initial supply
+                const ata = await splToken.getAssociatedTokenAddress(
+                    mintAccount.publicKey,
+                    wallet.publicKey,
+                    false,
+                    splToken.TOKEN_PROGRAM_ID,
+                    splToken.ASSOCIATED_TOKEN_PROGRAM_ID
+                );
+
+                // Create ATA
+                transaction.add(
+                    splToken.createAssociatedTokenAccountInstruction(
+                        wallet.publicKey,
+                        ata,
+                        wallet.publicKey,
+                        mintAccount.publicKey,
+                        splToken.TOKEN_PROGRAM_ID,
+                        splToken.ASSOCIATED_TOKEN_PROGRAM_ID
+                    )
+                );
+
+                // Mint initial supply
+                const initialSupply = params.initial_supply * Math.pow(10, params.decimals);
+                transaction.add(
+                    splToken.createMintToInstruction(
+                        mintAccount.publicKey,
+                        ata,
+                        wallet.publicKey,
+                        initialSupply,
+                        [],
+                        splToken.TOKEN_PROGRAM_ID
+                    )
+                );
+
+                // Mint sample amount if different
+                const sampleAmount = 1000 * Math.pow(10, params.decimals);
+                if (sampleAmount !== initialSupply) {
+                    transaction.add(
+                        splToken.createMintToInstruction(
+                            mintAccount.publicKey,
+                            ata,
+                            wallet.publicKey,
+                            sampleAmount,
+                            [],
+                            splToken.TOKEN_PROGRAM_ID
+                        )
+                    );
+                }
+
                 // Sign with mint account
                 transaction.partialSign(mintAccount);
                 
@@ -86,13 +135,15 @@ window.solana_request = async function(method, params) {
                     throw new Error(`Transaction failed: ${confirmation.value.err}`);
                 }
 
-                console.log("Token created successfully:", {
+                const result = {
                     signature: signed.signature,
                     mint: mintAccount.publicKey.toString(),
-                    metadata: metadataAddress.toString()
-                });
+                    metadata: metadataAddress.toString(),
+                    explorer_url: `https://solscan.io/token/${mintAccount.publicKey.toString()}?cluster=devnet`,
+                };
 
-                return signed.signature;
+                console.log("Token created successfully:", result);
+                return result;
             }
             default:
                 throw new Error(`Unknown method: ${method}`);

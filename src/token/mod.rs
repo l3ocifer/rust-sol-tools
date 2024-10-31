@@ -14,13 +14,21 @@ pub struct CreateTokenParams {
     pub freeze_authority: bool,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct TokenCreationResult {
+    pub signature: String,
+    pub mint: String,
+    pub metadata: String,
+    pub explorer_url: String,
+}
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = window)]
     fn solana_request(method: &str, params: JsValue) -> js_sys::Promise;
 }
 
-pub async fn create_token(params: CreateTokenParams) -> Result<String> {
+pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult> {
     let js_params = serde_wasm_bindgen::to_value(&params)
         .map_err(|e| anyhow!("Failed to serialize params: {}", e))?;
 
@@ -28,8 +36,8 @@ pub async fn create_token(params: CreateTokenParams) -> Result<String> {
     let result = wasm_bindgen_futures::JsFuture::from(promise).await
         .map_err(|e| anyhow!("Failed to create token: {:?}", e))?;
 
-    let signature = result.as_string()
-        .ok_or_else(|| anyhow!("Invalid response format"))?;
+    let result = serde_wasm_bindgen::from_value(result)
+        .map_err(|e| anyhow!("Failed to parse response: {}", e))?;
 
-    Ok(signature)
+    Ok(result)
 } 
