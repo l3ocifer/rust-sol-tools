@@ -1,5 +1,12 @@
-window.update_status = function(status) {
-    console.log("Status:", status);
+if (typeof window !== 'undefined') {
+    window.update_status = function(status) {
+        console.log("Status:", status);
+        // Optional: Update UI status element if it exists
+        const statusElement = document.getElementById('creation-status');
+        if (statusElement) {
+            statusElement.textContent = status;
+        }
+    }
 }
 
 window.solana_request = async function(method, params) {
@@ -13,43 +20,32 @@ window.solana_request = async function(method, params) {
 
     while (retries < MAX_RETRIES) {
         try {
-            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'));
+            const connection = new solanaWeb3.Connection(
+                solanaWeb3.clusterApiUrl('devnet'),
+                'confirmed'
+            );
             const wallet = window.solana;
             
             switch (method) {
                 case "createToken": {
+                    // Create mint account
                     window.update_status("Creating mint account...");
                     const mintAccount = solanaWeb3.Keypair.generate();
                     const mintRent = await connection.getMinimumBalanceForRentExemption(
                         solanaWeb3.MINT_SIZE
                     );
 
-                    window.update_status("Setting up metadata...");
-                    const [metadataAddress] = await solanaWeb3.PublicKey.findProgramAddress(
-                        [
-                            Buffer.from("metadata"),
-                            mplTokenMetadata.PROGRAM_ID.toBuffer(),
-                            mintAccount.publicKey.toBuffer(),
-                        ],
-                        mplTokenMetadata.PROGRAM_ID
-                    );
-
-                    const transaction = new solanaWeb3.Transaction();
+                    // First transaction: Create and initialize mint
+                    const transaction1 = new solanaWeb3.Transaction();
                     
-                    // Add instructions
-                    window.update_status("Building transaction...");
-                    transaction.add(
+                    transaction1.add(
                         solanaWeb3.SystemProgram.createAccount({
                             fromPubkey: wallet.publicKey,
                             newAccountPubkey: mintAccount.publicKey,
                             space: solanaWeb3.MINT_SIZE,
                             lamports: mintRent,
                             programId: splToken.TOKEN_PROGRAM_ID,
-                        })
-                    );
-
-                    // Initialize mint
-                    transaction.add(
+                        }),
                         splToken.createInitializeMintInstruction(
                             mintAccount.publicKey,
                             params.decimals,
@@ -59,8 +55,32 @@ window.solana_request = async function(method, params) {
                         )
                     );
 
-                    // Create metadata
-                    transaction.add(
+                    window.update_status("Creating token account...");
+                    const latestBlockhash1 = await connection.getLatestBlockhash('confirmed');
+                    transaction1.recentBlockhash = latestBlockhash1.blockhash;
+                    transaction1.feePayer = wallet.publicKey;
+                    transaction1.partialSign(mintAccount);
+                    
+                    const signed1 = await wallet.signAndSendTransaction(transaction1);
+                    await connection.confirmTransaction({
+                        signature: signed1.signature,
+                        blockhash: latestBlockhash1.blockhash,
+                        lastValidBlockHeight: latestBlockhash1.lastValidBlockHeight
+                    });
+
+                    // Second transaction: Create metadata
+                    window.update_status("Creating metadata...");
+                    const [metadataAddress] = await solanaWeb3.PublicKey.findProgramAddress(
+                        [
+                            Buffer.from("metadata"),
+                            mplTokenMetadata.PROGRAM_ID.toBuffer(),
+                            mintAccount.publicKey.toBuffer(),
+                        ],
+                        mplTokenMetadata.PROGRAM_ID
+                    );
+
+                    const transaction2 = new solanaWeb3.Transaction();
+                    transaction2.add(
                         mplTokenMetadata.createCreateMetadataAccountV3Instruction(
                             {
                                 metadata: metadataAddress,
@@ -85,85 +105,64 @@ window.solana_request = async function(method, params) {
                         )
                     );
 
-                    // Create ATA for initial supply
+                    const latestBlockhash2 = await connection.getLatestBlockhash('confirmed');
+                    transaction2.recentBlockhash = latestBlockhash2.blockhash;
+                    transaction2.feePayer = wallet.publicKey;
+                    
+                    const signed2 = await wallet.signAndSendTransaction(transaction2);
+                    await connection.confirmTransaction({
+                        signature: signed2.signature,
+                        blockhash: latestBlockhash2.blockhash,
+                        lastValidBlockHeight: latestBlockhash2.lastValidBlockHeight
+                    });
+
+                    // Third transaction: Create ATA and mint tokens
+                    window.update_status("Creating token account and minting...");
                     const ata = await splToken.getAssociatedTokenAddress(
                         mintAccount.publicKey,
-                        wallet.publicKey,
-                        false,
-                        splToken.TOKEN_PROGRAM_ID,
-                        splToken.ASSOCIATED_TOKEN_PROGRAM_ID
+                        wallet.publicKey
                     );
 
-                    // Create ATA
-                    transaction.add(
+                    const transaction3 = new solanaWeb3.Transaction();
+                    transaction3.add(
                         splToken.createAssociatedTokenAccountInstruction(
                             wallet.publicKey,
                             ata,
                             wallet.publicKey,
-                            mintAccount.publicKey,
-                            splToken.TOKEN_PROGRAM_ID,
-                            splToken.ASSOCIATED_TOKEN_PROGRAM_ID
-                        )
-                    );
-
-                    // Mint initial supply
-                    const initialSupply = params.initial_supply * Math.pow(10, params.decimals);
-                    transaction.add(
+                            mintAccount.publicKey
+                        ),
                         splToken.createMintToInstruction(
                             mintAccount.publicKey,
                             ata,
                             wallet.publicKey,
-                            initialSupply,
-                            [],
-                            splToken.TOKEN_PROGRAM_ID
+                            params.initial_supply * Math.pow(10, params.decimals),
+                            []
                         )
                     );
 
-                    // Mint sample amount if different
-                    const sampleAmount = 1000 * Math.pow(10, params.decimals);
-                    if (sampleAmount !== initialSupply) {
-                        transaction.add(
-                            splToken.createMintToInstruction(
-                                mintAccount.publicKey,
-                                ata,
-                                wallet.publicKey,
-                                sampleAmount,
-                                [],
-                                splToken.TOKEN_PROGRAM_ID
-                            )
-                        );
-                    }
-
-                    window.update_status("Getting latest blockhash...");
-                    const latestBlockhash = await connection.getLatestBlockhash('confirmed');
-                    transaction.recentBlockhash = latestBlockhash.blockhash;
-                    transaction.feePayer = wallet.publicKey;
-
-                    window.update_status("Signing transaction...");
-                    transaction.partialSign(mintAccount);
+                    const latestBlockhash3 = await connection.getLatestBlockhash('confirmed');
+                    transaction3.recentBlockhash = latestBlockhash3.blockhash;
+                    transaction3.feePayer = wallet.publicKey;
                     
-                    window.update_status("Sending transaction...");
-                    const signed = await wallet.signAndSendTransaction(transaction);
-                    
-                    window.update_status("Confirming transaction...");
+                    const signed3 = await wallet.signAndSendTransaction(transaction3);
                     const confirmation = await connection.confirmTransaction({
-                        signature: signed.signature,
-                        blockhash: latestBlockhash.blockhash,
-                        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-                    }, 'confirmed');
-                    
+                        signature: signed3.signature,
+                        blockhash: latestBlockhash3.blockhash,
+                        lastValidBlockHeight: latestBlockhash3.lastValidBlockHeight
+                    });
+
                     if (confirmation.value.err) {
                         throw new Error(`Transaction failed: ${confirmation.value.err}`);
                     }
 
-                    window.update_status("Verifying token account...");
+                    window.update_status("Verifying token...");
                     const tokenAccount = await connection.getAccountInfo(mintAccount.publicKey);
                     if (!tokenAccount) {
                         throw new Error("Token account not found after creation");
                     }
 
                     const result = {
-                        signature: signed.signature,
+                        signature: signed3.signature,
                         mint: mintAccount.publicKey.toString(),
                         metadata: metadataAddress.toString(),
                         explorer_url: `https://solscan.io/token/${mintAccount.publicKey.toString()}?cluster=devnet`,

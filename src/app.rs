@@ -94,67 +94,31 @@ fn CreateTokenPage() -> impl IntoView {
             return;
         }
 
-        if metadata_uri.get().is_empty() && token_image.get().is_none() {
-            set_error.set(Some("Either metadata URI or image file is required".to_string()));
-            return;
-        }
-
         set_loading.set(true);
         set_error.set(None);
         set_success.set(None);
 
         spawn_local(async move {
-            let metadata_url = if !metadata_uri.get().is_empty() {
-                metadata_uri.get()
-            } else if let Some(image_file) = token_image.get() {
-                match upload_image(image_file).await {
-                    Ok(image_url) => {
-                        let metadata = json!({
-                            "name": token_name.get(),
-                            "symbol": token_symbol.get(),
-                            "description": token_description.get(),
-                            "image": image_url,
-                            "attributes": [],
-                            "properties": {
-                                "files": [{
-                                    "uri": image_url,
-                                    "type": "image/png"
-                                }]
-                            }
-                        });
-
-                        match upload_metadata(metadata).await {
-                            Ok(url) => url,
-                            Err(e) => {
-                                set_error.set(Some(format!("Failed to upload metadata: {}", e)));
-                                set_loading.set(false);
-                                return;
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        set_error.set(Some(format!("Failed to upload image: {}", e)));
-                        set_loading.set(false);
-                        return;
-                    }
-                }
-            } else {
-                set_error.set(Some("Either metadata URI or image file is required".to_string()));
-                set_loading.set(false);
-                return;
-            };
+            let token_name = token_name.get_untracked();
+            let token_symbol = token_symbol.get_untracked();
+            let token_description = token_description.get_untracked();
+            let metadata_uri = metadata_uri.get_untracked();
+            let decimals = decimals.get_untracked();
+            let initial_supply = initial_supply.get_untracked();
+            let is_mutable = is_mutable.get_untracked();
+            let freeze_authority = freeze_authority.get_untracked();
 
             set_success.set(Some("Creating token...".to_string()));
             
             let result = create_token(CreateTokenParams {
-                name: token_name.get(),
-                symbol: token_symbol.get(),
-                description: token_description.get(),
-                metadata_uri: metadata_url,
-                decimals: decimals.get(),
-                initial_supply: initial_supply.get(),
-                is_mutable: is_mutable.get(),
-                freeze_authority: freeze_authority.get(),
+                name: token_name,
+                symbol: token_symbol,
+                description: token_description,
+                metadata_uri,
+                decimals,
+                initial_supply,
+                is_mutable,
+                freeze_authority,
             }).await;
 
             match result {
