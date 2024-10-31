@@ -285,4 +285,34 @@ body {
             margin: 0;
         }
     }
+
+    textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 0.5rem;
+        background: var(--card-background);
+        border: 1px solid var(--primary-color);
+        color: var(--text-color);
+        font-family: var(--font-family);
+        resize: vertical;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        padding: 0.5rem;
+        background: var(--card-background);
+        border: 1px solid var(--primary-color);
+        color: var(--text-color);
+        cursor: pointer;
+
+        &::file-selector-button {
+            background: var(--primary-color);
+            color: var(--background-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+            cursor: pointer;
+            font-family: var(--font-family);
+        }
+    }
 }

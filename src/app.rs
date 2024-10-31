@@ -3,6 +3,23 @@ use leptos_meta::*;
 use leptos_router::*;
 use web_sys::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
+use web_sys::{File, FileList, HtmlInputElement};
+use wasm_bindgen::JsCast;
+
+#[derive(Clone, Debug)]
+struct TokenMetadata {
+    name: String,
+    symbol: String,
+    description: String,
+    image: Option<File>,
+    attributes: Vec<TokenAttribute>,
+}
+
+#[derive(Clone, Debug)]
+struct TokenAttribute {
+    trait_type: String,
+    value: String,
+}
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -59,7 +76,8 @@ fn CreateTokenPage() -> impl IntoView {
     let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
     let (token_name, set_token_name) = create_signal(String::new());
     let (token_symbol, set_token_symbol) = create_signal(String::new());
-    let (token_uri, set_token_uri) = create_signal(String::new());
+    let (token_description, set_token_description) = create_signal(String::new());
+    let (token_image, set_token_image) = create_signal(None::<File>);
     let (decimals, set_decimals) = create_signal(9u8);
     let (initial_supply, set_initial_supply) = create_signal(1_000_000_000u64);
     let (is_mutable, set_is_mutable) = create_signal(true);
@@ -67,24 +85,50 @@ fn CreateTokenPage() -> impl IntoView {
     let (seller_fee_basis_points, set_seller_fee_basis_points) = create_signal(0u16);
     let (max_supply, set_max_supply) = create_signal(None::<u64>);
 
+    let handle_image_upload = move |ev: Event| {
+        let input: HtmlInputElement = ev.target().unwrap().unchecked_into();
+        if let Some(files) = input.files() {
+            if let Some(file) = files.get(0) {
+                set_token_image.set(Some(file));
+            }
+        }
+    };
+
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         if !wallet_ctx.state.get().connected {
             logging::warn!("Please connect your wallet first");
             return;
         }
-        logging::log!(
-            "Creating token: {} {} {} decimals: {} supply: {} mutable: {} freeze: {} fee: {} max_supply: {:?}", 
-            token_name.get(), 
-            token_symbol.get(), 
-            token_uri.get(),
-            decimals.get(),
-            initial_supply.get(),
-            is_mutable.get(),
-            freeze_authority.get(),
-            seller_fee_basis_points.get(),
-            max_supply.get(),
-        );
+
+        // Upload image and create metadata
+        spawn_local(async move {
+            if let Some(image_file) = token_image.get() {
+                // Upload image to Arweave/IPFS (implementation needed)
+                let image_url = upload_image(image_file).await.unwrap_or_default();
+                
+                // Create and upload metadata
+                let metadata = json!({
+                    "name": token_name.get(),
+                    "symbol": token_symbol.get(),
+                    "description": token_description.get(),
+                    "image": image_url,
+                    "attributes": [],
+                    "properties": {
+                        "files": [{
+                            "uri": image_url,
+                            "type": "image/png"
+                        }]
+                    }
+                });
+
+                // Upload metadata to Arweave/IPFS (implementation needed)
+                let metadata_url = upload_metadata(metadata).await.unwrap_or_default();
+
+                // Continue with token creation using metadata_url
+                logging::log!("Token metadata uploaded: {}", metadata_url);
+            }
+        });
     };
 
     view! {
@@ -119,15 +163,25 @@ fn CreateTokenPage() -> impl IntoView {
                 </div>
 
                 <div class="form-group">
-                    <label for="token_uri">"Metadata URI"</label>
-                    <input
-                        type="url"
-                        id="token_uri"
+                    <label for="token_description">"Token Description"</label>
+                    <textarea
+                        id="token_description"
                         required
-                        placeholder="Enter metadata URI"
+                        placeholder="Enter token description"
                         on:input=move |ev| {
-                            set_token_uri.set(event_target_value(&ev));
+                            set_token_description.set(event_target_value(&ev));
                         }
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="token_image">"Token Image"</label>
+                    <input
+                        type="file"
+                        id="token_image"
+                        accept="image/*"
+                        required
+                        on:change=handle_image_upload
                     />
                 </div>
 
