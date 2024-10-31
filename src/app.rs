@@ -67,7 +67,6 @@ fn CreateTokenPage() -> impl IntoView {
     let (token_name, set_token_name) = create_signal(String::new());
     let (token_symbol, set_token_symbol) = create_signal(String::new());
     let (token_description, set_token_description) = create_signal(String::new());
-    let (token_image, set_token_image) = create_signal(None::<File>);
     let (metadata_uri, set_metadata_uri) = create_signal(String::new());
     let (decimals, set_decimals) = create_signal(9u8);
     let (initial_supply, set_initial_supply) = create_signal(1_000_000_000u64);
@@ -76,6 +75,7 @@ fn CreateTokenPage() -> impl IntoView {
     let (loading, set_loading) = create_signal(false);
     let (error, set_error) = create_signal(Option::<String>::None);
     let (success, set_success) = create_signal(Option::<String>::None);
+    let (status, set_status) = create_signal(String::new());
 
     let handle_image_upload = move |ev: Event| {
         let input: HtmlInputElement = ev.target().unwrap().unchecked_into();
@@ -99,30 +99,20 @@ fn CreateTokenPage() -> impl IntoView {
         set_success.set(None);
 
         spawn_local(async move {
-            let token_name = token_name.get_untracked();
-            let token_symbol = token_symbol.get_untracked();
-            let token_description = token_description.get_untracked();
-            let metadata_uri = metadata_uri.get_untracked();
-            let decimals = decimals.get_untracked();
-            let initial_supply = initial_supply.get_untracked();
-            let is_mutable = is_mutable.get_untracked();
-            let freeze_authority = freeze_authority.get_untracked();
+            let params = CreateTokenParams {
+                name: token_name.get_untracked(),
+                symbol: token_symbol.get_untracked(),
+                description: token_description.get_untracked(),
+                metadata_uri: metadata_uri.get_untracked(),
+                decimals: decimals.get_untracked(),
+                initial_supply: initial_supply.get_untracked(),
+                is_mutable: is_mutable.get_untracked(),
+                freeze_authority: freeze_authority.get_untracked(),
+            };
 
-            set_success.set(Some("Creating token...".to_string()));
-            
-            let result = create_token(CreateTokenParams {
-                name: token_name,
-                symbol: token_symbol,
-                description: token_description,
-                metadata_uri,
-                decimals,
-                initial_supply,
-                is_mutable,
-                freeze_authority,
-            }).await;
-
-            match result {
+            match create_token(params).await {
                 Ok(result) => {
+                    set_status.set(result.status);
                     set_success.set(Some(format!(
                         "Token created successfully!\n\
                          Mint Address: {}\n\
@@ -145,7 +135,50 @@ fn CreateTokenPage() -> impl IntoView {
         <div class="container">
             <h2>"Create New Token"</h2>
             
-            <form class="token-form" on:submit=on_submit>
+            <form class="token-form" on:submit=move |ev| {
+                ev.prevent_default();
+                
+                if !wallet_ctx.state.get_untracked().connected {
+                    set_error.set(Some("Please connect your wallet first".to_string()));
+                    return;
+                }
+
+                set_loading.set(true);
+                set_error.set(None);
+                set_success.set(None);
+
+                spawn_local(async move {
+                    let params = CreateTokenParams {
+                        name: token_name.get_untracked(),
+                        symbol: token_symbol.get_untracked(),
+                        description: token_description.get_untracked(),
+                        metadata_uri: metadata_uri.get_untracked(),
+                        decimals: decimals.get_untracked(),
+                        initial_supply: initial_supply.get_untracked(),
+                        is_mutable: is_mutable.get_untracked(),
+                        freeze_authority: freeze_authority.get_untracked(),
+                    };
+
+                    match create_token(params).await {
+                        Ok(result) => {
+                            set_status.set(result.status);
+                            set_success.set(Some(format!(
+                                "Token created successfully!\n\
+                                 Mint Address: {}\n\
+                                 View on Solscan: {}\n\
+                                 Transaction: {}",
+                                result.mint,
+                                result.explorer_url,
+                                result.signature
+                            )));
+                        }
+                        Err(e) => {
+                            set_error.set(Some(format!("Failed to create token: {}", e)));
+                        }
+                    }
+                    set_loading.set(false);
+                });
+            }>
                 <div class="form-group">
                     <label for="token_name">"Token Name"</label>
                     <input
@@ -267,6 +300,10 @@ fn CreateTokenPage() -> impl IntoView {
                         />
                         "Enable freeze authority"
                     </label>
+                </div>
+
+                <div id="creation-status" class="status-message">
+                    {move || status.get()}
                 </div>
 
                 {move || error.get().map(|err| view! {

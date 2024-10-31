@@ -1,0 +1,9 @@
+.status-message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #2d2d2d;
+    color: #00ff00;
+    font-family: monospace;
+    min-height: 20px;
+} 
