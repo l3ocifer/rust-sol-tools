@@ -20,27 +20,7 @@ extern "C" {
     fn solana_request(method: &str, params: JsValue) -> js_sys::Promise;
 }
 
-pub async fn create_token(
-    name: String,
-    symbol: String,
-    description: String,
-    metadata_uri: String,
-    decimals: u8,
-    initial_supply: u64,
-    is_mutable: bool,
-    freeze_authority: bool,
-) -> Result<String> {
-    let params = CreateTokenParams {
-        name,
-        symbol,
-        description,
-        metadata_uri,
-        decimals,
-        initial_supply,
-        is_mutable,
-        freeze_authority,
-    };
-
+pub async fn create_token(params: CreateTokenParams) -> Result<String> {
     let js_params = serde_wasm_bindgen::to_value(&params)
         .map_err(|e| anyhow!("Failed to serialize params: {}", e))?;
 

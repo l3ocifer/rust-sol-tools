@@ -146,16 +146,16 @@ fn CreateTokenPage() -> impl IntoView {
 
             set_success.set(Some("Creating token...".to_string()));
             
-            let result = create_token(
-                token_name.get(),
-                token_symbol.get(),
-                token_description.get(),
-                metadata_url,
-                decimals.get(),
-                initial_supply.get(),
-                is_mutable.get(),
-                freeze_authority.get(),
-            ).await;
+            let result = create_token(CreateTokenParams {
+                name: token_name.get(),
+                symbol: token_symbol.get(),
+                description: token_description.get(),
+                metadata_uri: metadata_url,
+                decimals: decimals.get(),
+                initial_supply: initial_supply.get(),
+                is_mutable: is_mutable.get(),
+                freeze_authority: freeze_authority.get(),
+            }).await;
 
             match result {
                 Ok(signature) => {
