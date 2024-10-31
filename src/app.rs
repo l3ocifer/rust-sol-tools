@@ -4,24 +4,9 @@ use leptos_router::*;
 use web_sys::{File, Event, SubmitEvent, HtmlInputElement};
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::upload::{upload_image, upload_metadata};
+use crate::token::create_token;
 use serde_json::json;
 use wasm_bindgen::JsCast;
-use std::ops::Not;
-
-#[derive(Clone, Debug)]
-struct TokenMetadata {
-    name: String,
-    symbol: String,
-    description: String,
-    image: Option<File>,
-    attributes: Vec<TokenAttribute>,
-}
-
-#[derive(Clone, Debug)]
-struct TokenAttribute {
-    trait_type: String,
-    value: String,
-}
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -83,13 +68,11 @@ fn CreateTokenPage() -> impl IntoView {
     let (token_symbol, set_token_symbol) = create_signal(String::new());
     let (token_description, set_token_description) = create_signal(String::new());
     let (token_image, set_token_image) = create_signal(None::<File>);
+    let (metadata_uri, set_metadata_uri) = create_signal(String::new());
     let (decimals, set_decimals) = create_signal(9u8);
     let (initial_supply, set_initial_supply) = create_signal(1_000_000_000u64);
     let (is_mutable, set_is_mutable) = create_signal(true);
     let (freeze_authority, set_freeze_authority) = create_signal(true);
-    let (seller_fee_basis_points, set_seller_fee_basis_points) = create_signal(0u16);
-    let (max_supply, set_max_supply) = create_signal(None::<u64>);
-    let (metadata_uri, set_metadata_uri) = create_signal(String::new());
     let (loading, set_loading) = create_signal(false);
     let (error, set_error) = create_signal(Option::<String>::None);
     let (success, set_success) = create_signal(Option::<String>::None);
@@ -111,19 +94,21 @@ fn CreateTokenPage() -> impl IntoView {
             return;
         }
 
+        if metadata_uri.get().is_empty() && token_image.get().is_none() {
+            set_error.set(Some("Either metadata URI or image file is required".to_string()));
+            return;
+        }
+
         set_loading.set(true);
         set_error.set(None);
         set_success.set(None);
 
-        // Upload image and create metadata
         spawn_local(async move {
-            let metadata_url = if let Some(uri) = metadata_uri.get().is_empty().not().then(|| metadata_uri.get()) {
-                uri
+            let metadata_url = if !metadata_uri.get().is_empty() {
+                metadata_uri.get()
             } else if let Some(image_file) = token_image.get() {
-                // Upload image to Arweave/IPFS
                 match upload_image(image_file).await {
                     Ok(image_url) => {
-                        // Create and upload metadata
                         let metadata = json!({
                             "name": token_name.get(),
                             "symbol": token_symbol.get(),
@@ -138,7 +123,6 @@ fn CreateTokenPage() -> impl IntoView {
                             }
                         });
 
-                        // Upload metadata to Arweave/IPFS
                         match upload_metadata(metadata).await {
                             Ok(url) => url,
                             Err(e) => {
@@ -160,9 +144,27 @@ fn CreateTokenPage() -> impl IntoView {
                 return;
             };
 
-            // Continue with token creation using metadata_url
-            logging::log!("Token metadata URL: {}", metadata_url);
-            set_success.set(Some("Token created successfully!".to_string()));
+            set_success.set(Some("Creating token...".to_string()));
+            
+            let result = create_token(
+                token_name.get(),
+                token_symbol.get(),
+                token_description.get(),
+                metadata_url,
+                decimals.get(),
+                initial_supply.get(),
+                is_mutable.get(),
+                freeze_authority.get(),
+            ).await;
+
+            match result {
+                Ok(signature) => {
+                    set_success.set(Some(format!("Token created successfully! Transaction: {}", signature)));
+                }
+                Err(e) => {
+                    set_error.set(Some(format!("Failed to create token: {}", e)));
+                }
+            }
             set_loading.set(false);
         });
     };
@@ -211,12 +213,27 @@ fn CreateTokenPage() -> impl IntoView {
                 </div>
 
                 <div class="form-group">
-                    <label for="token_image">"Token Image (Required if no Metadata URI)"</label>
+                    <label for="metadata_uri">"Metadata URI"</label>
+                    <input
+                        type="text"
+                        id="metadata_uri"
+                        placeholder="Enter metadata URI from Pinata or similar service"
+                        on:input=move |ev| {
+                            let uri = event_target_value(&ev);
+                            set_metadata_uri.set(uri.clone());
+                            if !uri.is_empty() {
+                                set_token_image.set(None);
+                            }
+                        }
+                    />
+                </div>
+
+                <div class="form-group" class:hidden=move || !metadata_uri.get().is_empty()>
+                    <label for="token_image">"Token Image"</label>
                     <input
                         type="file"
                         id="token_image"
                         accept="image/*"
-                        required=move || metadata_uri.get().is_empty()
                         on:change=handle_image_upload
                     />
                 </div>
@@ -254,41 +271,6 @@ fn CreateTokenPage() -> impl IntoView {
                     />
                 </div>
 
-                <div class="form-group">
-                    <label for="max_supply">"Maximum Supply (optional)"</label>
-                    <input
-                        type="number"
-                        id="max_supply"
-                        min="0"
-                        placeholder="Leave empty for unlimited"
-                        on:input=move |ev| {
-                            let value = event_target_value(&ev);
-                            if value.is_empty() {
-                                set_max_supply.set(None);
-                            } else if let Ok(num) = value.parse() {
-                                set_max_supply.set(Some(num));
-                            }
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="seller_fee">"Seller Fee Basis Points (0-10000)"</label>
-                    <input
-                        type="number"
-                        id="seller_fee"
-                        min="0"
-                        max="10000"
-                        value="0"
-                        required
-                        on:input=move |ev| {
-                            if let Ok(value) = event_target_value(&ev).parse() {
-                                set_seller_fee_basis_points.set(value);
-                            }
-                        }
-                    />
-                </div>
-
                 <div class="form-group checkbox-group">
                     <label>
                         <input
@@ -313,18 +295,6 @@ fn CreateTokenPage() -> impl IntoView {
                         />
                         "Enable freeze authority"
                     </label>
-                </div>
-
-                <div class="form-group">
-                    <label for="metadata_uri">"Metadata URI (Optional)"</label>
-                    <input
-                        type="text"
-                        id="metadata_uri"
-                        placeholder="Enter metadata URI from Pinata or similar service"
-                        on:input=move |ev| {
-                            set_metadata_uri.set(event_target_value(&ev));
-                        }
-                    />
                 </div>
 
                 {move || error.get().map(|err| view! {

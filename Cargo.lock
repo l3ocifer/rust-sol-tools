@@ -4279,6 +4279,7 @@ version = "0.1.0"
 dependencies = [
  "actix-files",
  "actix-web",
+ "anyhow",
  "borsh 1.5.1",
  "console_error_panic_hook",
  "envy",
@@ -4292,6 +4293,7 @@ dependencies = [
  "libc",
  "mpl-token-metadata",
  "serde",
+ "serde-wasm-bindgen",
  "serde_json",
  "solana-client",
  "solana-program",
