@@ -6,6 +6,7 @@ use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::upload::{upload_image, upload_metadata};
 use serde_json::json;
 use wasm_bindgen::JsCast;
+use std::ops::Not;
 
 #[derive(Clone, Debug)]
 struct TokenMetadata {
