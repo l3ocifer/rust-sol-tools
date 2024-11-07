@@ -2,6 +2,8 @@ pub mod app;
 pub mod wallet;
 pub mod upload;
 pub mod token;
+pub mod routes;
+pub mod utils;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
@@ -22,5 +24,6 @@ pub fn hydrate() {
 
 #[cfg(feature = "ssr")]
 pub fn register_server_functions() {
-    // Register any server functions here when SSR is implemented
+    _ = CreateToken::register();
+    _ = UploadMetadata::register();
 }
