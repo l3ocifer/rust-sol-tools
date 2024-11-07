@@ -1,6 +1,7 @@
+use crate::utils::contract::create_token;
+
 #[cfg(feature = "ssr")]
 use actix_web::{post, web, HttpResponse, Responder};
-use crate::utils::contract::create_token;
 
 #[cfg(feature = "ssr")]
 #[derive(serde::Deserialize)]

@@ -1,6 +1,7 @@
+use crate::utils::pinata::{upload_metadata_to_pinata, Metadata};
+
 #[cfg(feature = "ssr")]
 use actix_web::{post, web, HttpResponse, Responder};
-use crate::utils::pinata::{upload_metadata_to_pinata, Metadata};
 
 #[cfg(feature = "ssr")]
 #[post("/upload-metadata")]
