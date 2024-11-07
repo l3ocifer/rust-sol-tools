@@ -15,44 +15,47 @@ name = "create_spl"
 path = "src/bin/create_spl.rs"
 
 [dependencies]
-actix-files = { version = "0.6", optional = true }
-actix-web = { version = "4.0", optional = true }
-console_error_panic_hook = "0.1"
-http = { version = "1.0.0", optional = true }
-leptos = { version = "0.6.5" }
-leptos_meta = { version = "0.6.5" }
+# Core dependencies
+leptos = { version = "0.6.5", features = ["nightly"] }
+leptos_meta = { version = "0.6.5", features = ["nightly"] }
+leptos_router = { version = "0.6.5", features = ["nightly"] }
 leptos_actix = { version = "0.6.5", optional = true }
-leptos_router = { version = "0.6.5" }
-wasm-bindgen = "0.2.93"
-web-sys = { version = "0.3", features = ["Event", "SubmitEvent", "HtmlElement", "Window", "Document", "Storage", "Performance", "File", "FileList", "HtmlInputElement"] }
-serde = { version = "1.0", features = ["derive"] }
+console_error_panic_hook = "0.1"
+log = "0.4"
+
+# WASM dependencies
+wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Window", "Document", "File"] }
 js-sys = "0.3"
-gloo-utils = "0.2"
+
+# Server-only dependencies
+tokio = { version = "1", features = ["full"], optional = true }
+actix-files = { version = "0.6", optional = true }
+actix-web = { version = "4", optional = true }
+http = { version = "1.0.0", optional = true }
+
+# Solana dependencies (server-only)
+solana-program = { version = "1.17", optional = true }
+solana-client = { version = "1.17", optional = true }
+solana-sdk = { version = "1.17", optional = true }
+spl-token = { version = "4.0", optional = true }
+spl-associated-token-account = { version = "2.0", optional = true }
+mpl-token-metadata = { version = "1.13", optional = true }
+
+# Shared dependencies
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-anyhow = "1.0"
-serde-wasm-bindgen = "0.6"
-borsh = "0.10.3"
-borsh-derive = "0.10.3"
-url = "2.5.0"
-solana-program = { version = "1.17.12", optional = true }
-solana-client = { version = "1.17.12", optional = true }
-solana-sdk = { version = "1.17.12", optional = true }
-spl-token = { version = "4.0", features = ["no-entrypoint"], optional = true }
-spl-associated-token-account = { version = "2.3", features = ["no-entrypoint"], optional = true }
-mpl-token-metadata = { version = "1.13", features = ["no-entrypoint"], optional = true }
-tokio = { version = "1.35.1", features = ["full"], optional = true }
-dotenv = "0.15.0"
-reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
-base58 = "0.1.0"
-envy = "0.4"
-mio = "0.8.11"
-zstd-sys = { version = "2.0.9", features = ["pkg-config"], default-features = false }
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+dotenv = "0.15"
 
 [features]
-default = ["ssr"]
-csr = ["leptos/csr", "leptos_meta/csr", "leptos_router/csr"]
-hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
+default = ["hydrate", "ssr"]
+hydrate = [
+    "leptos/hydrate", 
+    "leptos_meta/hydrate", 
+    "leptos_router/hydrate"
+]
 ssr = [
     "dep:actix-files",
     "dep:actix-web",
@@ -60,8 +63,8 @@ ssr = [
     "leptos/ssr",
     "leptos_meta/ssr",
     "leptos_router/ssr",
-    "dep:http",
     "dep:tokio",
+    "dep:http",
     "dep:solana-program",
     "dep:solana-client",
     "dep:solana-sdk",
@@ -69,17 +72,17 @@ ssr = [
     "dep:spl-associated-token-account",
     "dep:mpl-token-metadata"
 ]
-cli = [
-    "dep:solana-program",
-    "dep:solana-client",
-    "dep:solana-sdk",
-    "dep:spl-token",
-    "dep:spl-associated-token-account",
-    "dep:mpl-token-metadata",
-    "dep:tokio"
-]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+solana-program = "1.17"
+solana-client = "1.17"
+solana-sdk = "1.17"
+spl-token = "4.0"
+spl-associated-token-account = "2.0"
+mpl-token-metadata = "1.13"
 
 [package.metadata.leptos]
+bin-target = "sol-tools"
 output-name = "sol-tools"
 site-root = "target/site"
 site-pkg-dir = "pkg"
@@ -91,4 +94,3 @@ end2end-cmd = "npx playwright test"
 end2end-dir = "end2end"
 browserquery = "defaults"
 env = { "PINATA_API_KEY" = "", "PINATA_SECRET_API_KEY" = "", "SOLANA_SECRET_KEY" = "" }
-bin-target = "sol-tools"

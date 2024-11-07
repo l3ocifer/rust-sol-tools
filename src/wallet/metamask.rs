@@ -1,22 +1,24 @@
 use wasm_bindgen::prelude::*;
+use web_sys::window;
+use js_sys::Promise;
 use leptos::SignalUpdate;
 use super::WalletContext;
 
-pub async fn connect_metamask(ctx: &WalletContext) {
+pub async fn connect_metamask(wallet_context: &WalletContext) {
     match web_sys::window() {
         Some(window) => {
             if let Some(ethereum) = js_sys::Reflect::get(&window, &JsValue::from_str("ethereum")).ok() {
                 if js_sys::Reflect::get(&ethereum, &JsValue::from_str("isMetaMask")).ok().is_some() {
                     match request_metamask_accounts(ethereum).await {
                         Ok(address) => {
-                            ctx.set_state.update(|state| {
+                            wallet_context.set_state.update(|state| {
                                 state.connected = true;
                                 state.address = Some(address);
                                 state.wallet_type = Some(super::WalletType::MetaMask);
                                 state.error = None;
                             });
                         }
-                        Err(e) => ctx.set_error(&format!("Failed to connect: {}", e)),
+                        Err(e) => wallet_context.set_error(&format!("Failed to connect: {}", e)),
                     }
                     return;
                 }
@@ -24,7 +26,7 @@ pub async fn connect_metamask(ctx: &WalletContext) {
         }
         None => (),
     }
-    ctx.set_error("MetaMask wallet not found");
+    wallet_context.set_error("MetaMask wallet not found");
 }
 
 async fn request_metamask_accounts(ethereum: JsValue) -> Result<String, String> {

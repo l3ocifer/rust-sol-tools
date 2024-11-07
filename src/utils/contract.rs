@@ -8,7 +8,7 @@ use {
         signature::{read_keypair_file, Keypair, Signer},
         transaction::Transaction,
     },
-    spl_associated_token_account::{get_associated_token_address},
+    spl_associated_token_account::get_associated_token_address,
     spl_token::state::Mint,
     mpl_token_metadata::{
         instructions as token_metadata_instruction,

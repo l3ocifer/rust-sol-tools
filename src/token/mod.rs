@@ -23,10 +23,10 @@ pub struct TokenCreationResult {
 #[cfg(not(target_arch = "wasm32"))]
 mod solana {
     use super::*;
-    use crate::utils::contract;
+    use crate::utils::contract::{self, TokenConfig};
     
     pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
-        let config = contract::TokenConfig {
+        let config = TokenConfig {
             name: params.name,
             symbol: params.symbol,
             uri: params.metadata_uri,
@@ -36,7 +36,13 @@ mod solana {
             freeze_authority: params.freeze_authority,
         };
         
-        contract::create_token(config).await
+        let result = contract::create_token(config).await?;
+        Ok(TokenCreationResult {
+            status: result.status,
+            mint: result.mint,
+            explorer_url: result.explorer_url,
+            signature: result.signature,
+        })
     }
 }
 
