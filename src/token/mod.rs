@@ -10,6 +10,9 @@ pub struct CreateTokenParams {
     pub initial_supply: u64,
     pub is_mutable: bool,
     pub freeze_authority: bool,
+    pub rate_limit: Option<u64>,
+    pub transfer_fee: Option<u16>,
+    pub max_transfer_amount: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -34,6 +37,9 @@ mod solana {
             initial_supply: params.initial_supply,
             is_mutable: params.is_mutable,
             freeze_authority: params.freeze_authority,
+            rate_limit: params.rate_limit,
+            transfer_fee: params.transfer_fee,
+            max_transfer_amount: params.max_transfer_amount,
         };
         
         let result = contract::create_token(config).await?;

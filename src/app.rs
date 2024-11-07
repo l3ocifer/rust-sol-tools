@@ -69,6 +69,9 @@ fn CreateTokenPage() -> impl IntoView {
     let (initial_supply, set_initial_supply) = create_signal(1_000_000_000u64);
     let (is_mutable, set_is_mutable) = create_signal(true);
     let (freeze_authority, set_freeze_authority) = create_signal(true);
+    let (rate_limit, set_rate_limit) = create_signal(Option::<u64>::None);
+    let (transfer_fee, set_transfer_fee) = create_signal(Option::<u16>::None);
+    let (max_transfer_amount, set_max_transfer_amount) = create_signal(Option::<u64>::None);
     let (loading, set_loading) = create_signal(false);
     let (error, set_error) = create_signal(Option::<String>::None);
     let (success, set_success) = create_signal(Option::<String>::None);
@@ -96,6 +99,9 @@ fn CreateTokenPage() -> impl IntoView {
                 initial_supply: initial_supply.get_untracked(),
                 is_mutable: is_mutable.get_untracked(),
                 freeze_authority: freeze_authority.get_untracked(),
+                rate_limit: rate_limit.get_untracked(),
+                transfer_fee: transfer_fee.get_untracked(),
+                max_transfer_amount: max_transfer_amount.get_untracked(),
             };
 
             match create_token(params).await {
@@ -231,6 +237,53 @@ fn CreateTokenPage() -> impl IntoView {
                         />
                         "Enable freeze authority"
                     </label>
+                </div>
+
+                <div class="form-group">
+                    <label>"Smart Contract Settings"</label>
+                    
+                    <div class="form-row">
+                        <label for="rate_limit">"Rate Limit (tokens per day)"</label>
+                        <input
+                            type="number"
+                            id="rate_limit"
+                            min="0"
+                            placeholder="Optional: Enter max tokens per day"
+                            on:input=move |ev| {
+                                let value = event_target_value(&ev).parse::<u64>().ok();
+                                set_rate_limit.set(value);
+                            }
+                        />
+                    </div>
+
+                    <div class="form-row">
+                        <label for="transfer_fee">"Transfer Fee (basis points)"</label>
+                        <input
+                            type="number"
+                            id="transfer_fee"
+                            min="0"
+                            max="10000"
+                            placeholder="Optional: Enter fee in basis points (0-10000)"
+                            on:input=move |ev| {
+                                let value = event_target_value(&ev).parse::<u16>().ok();
+                                set_transfer_fee.set(value);
+                            }
+                        />
+                    </div>
+
+                    <div class="form-row">
+                        <label for="max_transfer">"Max Transfer Amount"</label>
+                        <input
+                            type="number"
+                            id="max_transfer"
+                            min="0"
+                            placeholder="Optional: Enter max tokens per transfer"
+                            on:input=move |ev| {
+                                let value = event_target_value(&ev).parse::<u64>().ok();
+                                set_max_transfer_amount.set(value);
+                            }
+                        />
+                    </div>
                 </div>
 
                 <div id="creation-status" class="status-message">

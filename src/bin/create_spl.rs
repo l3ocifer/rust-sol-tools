@@ -11,8 +11,8 @@ use {
     spl_associated_token_account::{self, get_associated_token_address},
     spl_token::state::Mint,
     mpl_token_metadata::{
-        instructions as token_metadata_instruction,
-        types::DataV2,
+        instruction as token_metadata_instruction,
+        state::DataV2,
     },
 };
 

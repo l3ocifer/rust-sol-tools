@@ -1,6 +1,4 @@
 use wasm_bindgen::prelude::*;
-use web_sys::window;
-use js_sys::Promise;
 use leptos::SignalUpdate;
 use super::WalletContext;
 
