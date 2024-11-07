@@ -14,7 +14,7 @@ use borsh::ser::BorshSerialize;
 
 #[derive(serde::Deserialize)]
 struct Env {
-    rpc_url: url::Url,
+    rpc_url: String,
     signer_keypair_path: String,
     token_name: String,
     token_symbol: String,
@@ -28,7 +28,7 @@ struct Env {
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = envy::from_env::<Env>()?;
-    let rpc_url = env.rpc_url.to_string();
+    let rpc_url = env.rpc_url;
     let client = RpcClient::new_with_commitment(rpc_url.clone(), CommitmentConfig::confirmed());
     let payer = read_keypair_file(&env.signer_keypair_path)
         .map_err(|e| format!("Failed to read keypair file: {}", e))?;

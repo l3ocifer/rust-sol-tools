@@ -35,17 +35,17 @@ gloo-utils = "0.2"
 serde_json = "1.0"
 anyhow = "1.0"
 serde-wasm-bindgen = "0.6"
-borsh = { version = "1.3.0", features = ["derive"] }
-url = "2.5.0"
+borsh = { version = "0.10.3", features = ["derive"] }
+url = { version = "2.5.0", features = ["serde"] }
 
 # Server-side only dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-solana-program = "1.16.0"
+solana-program = { version = "1.16.0", features = ["borsh"] }
 solana-client = "1.16.0"
-solana-sdk = "1.16.0"
+solana-sdk = { version = "1.16.0", features = ["borsh"] }
 spl-token = { version = "4.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "2.2", features = ["no-entrypoint"] }
-mpl-token-metadata = "2.0.0"
+mpl-token-metadata = { version = "1.13", features = ["no-entrypoint"] }
 tokio = { version = "1.21", features = ["macros", "rt-multi-thread"] }
 dotenv = "0.15.0"
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
