@@ -23,10 +23,16 @@ pub struct TokenCreationResult {
 #[cfg(not(target_arch = "wasm32"))]
 mod solana {
     use super::*;
+    use crate::utils::contract;
     
     pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
-        // Solana-specific implementation
-        todo!()
+        let signature = contract::create_token(params.metadata_uri).await?;
+        Ok(TokenCreationResult {
+            status: "success".to_string(),
+            mint: "".to_string(), // TODO: Return from create_token
+            explorer_url: format!("https://explorer.solana.com/tx/{}?cluster=devnet", signature),
+            signature,
+        })
     }
 }
 
