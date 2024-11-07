@@ -1,3 +1,6 @@
+use borsh::{BorshSerialize, BorshDeserialize}; // Traits
+use borsh_derive::{BorshSerialize, BorshDeserialize}; // Derive macros
+
 #[cfg(not(target_arch = "wasm32"))]
 use {
     solana_client::rpc_client::RpcClient,
@@ -19,8 +22,6 @@ use {
         instruction as auth_rules_instruction,
         state::{RuleSetV1, RuleSetV2},
     },
-    borsh::{BorshSerialize, BorshDeserialize},
-    borsh_derive::{BorshSerialize, BorshDeserialize},
 };
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
