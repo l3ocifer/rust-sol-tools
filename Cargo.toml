@@ -6,6 +6,14 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "sol-tools"
+path = "src/main.rs"
+
+[[bin]]
+name = "create_spl"
+path = "src/bin/create_spl.rs"
+
 [dependencies]
 actix-files = { version = "0.6", optional = true }
 actix-web = { version = "4.0", optional = true }
@@ -27,19 +35,22 @@ serde-wasm-bindgen = "0.6"
 borsh = "0.10.3"
 borsh-derive = "0.10.3"
 url = "2.5.0"
-solana-program = { version = "1.16.0", optional = true }
-solana-client = { version = "1.16.0", optional = true }
-solana-sdk = { version = "1.16.0", optional = true }
+solana-program = { version = "1.17.12", optional = true }
+solana-client = { version = "1.17.12", optional = true }
+solana-sdk = { version = "1.17.12", optional = true }
 spl-token = { version = "4.0", features = ["no-entrypoint"], optional = true }
-spl-associated-token-account = { version = "2.2", features = ["no-entrypoint"], optional = true }
+spl-associated-token-account = { version = "2.3", features = ["no-entrypoint"], optional = true }
 mpl-token-metadata = { version = "1.13", features = ["no-entrypoint"], optional = true }
-tokio = { version = "1.21", features = ["sync", "macros", "io-util", "rt", "time"], optional = true }
+tokio = { version = "1.35.1", features = ["full"], optional = true }
 dotenv = "0.15.0"
-reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
 base58 = "0.1.0"
 envy = "0.4"
+mio = "0.8.11"
+zstd-sys = { version = "2.0.9", features = ["pkg-config"], default-features = false }
 
 [features]
+default = ["ssr"]
 csr = ["leptos/csr", "leptos_meta/csr", "leptos_router/csr"]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
@@ -50,13 +61,13 @@ ssr = [
     "leptos_meta/ssr",
     "leptos_router/ssr",
     "dep:http",
+    "dep:tokio",
     "dep:solana-program",
     "dep:solana-client",
     "dep:solana-sdk",
     "dep:spl-token",
     "dep:spl-associated-token-account",
-    "dep:mpl-token-metadata",
-    "dep:tokio"
+    "dep:mpl-token-metadata"
 ]
 cli = [
     "dep:solana-program",
@@ -80,13 +91,4 @@ end2end-cmd = "npx playwright test"
 end2end-dir = "end2end"
 browserquery = "defaults"
 env = { "PINATA_API_KEY" = "", "PINATA_SECRET_API_KEY" = "", "SOLANA_SECRET_KEY" = "" }
-bin-features = ["ssr"]
-bin-default-features = false
-lib-features = ["hydrate"]
-lib-default-features = false
-lib-profile-release = "wasm-release"
 bin-target = "sol-tools"
-
-[[bin]]
-name = "create_spl"
-required-features = ["cli"]

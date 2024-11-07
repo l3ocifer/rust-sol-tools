@@ -1,28 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link data-trunk rel="rust" data-bin="sol-tools" />
+    <link data-trunk rel="scss" href="style/main.scss" />
+    <link data-trunk rel="copy-dir" href="assets" />
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <title>Token Tools</title>
 </head>
-<body>
-    <div id="creation-status" class="status-message"></div>
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.js"></script>
-    <script src="https://unpkg.com/@metaplex-foundation/mpl-token-metadata@latest/lib/index.iife.min.js"></script>
-    <script src="/phantom.js"></script>
-    <script type="module">
-        try {
-            const { default: init } = await import('/pkg/sol_tools.js');
-            await init().catch(console.error);
-        } catch (error) {
-            console.error("Initialization error:", error);
-            const statusElement = document.getElementById('creation-status');
-            if (statusElement) {
-                statusElement.textContent = "Failed to initialize application";
-            }
-        }
-    </script>
-</body>
+<body></body>
 </html> 

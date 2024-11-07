@@ -26,13 +26,17 @@ mod solana {
     use crate::utils::contract;
     
     pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
-        let signature = contract::create_token(params.metadata_uri).await?;
-        Ok(TokenCreationResult {
-            status: "success".to_string(),
-            mint: "".to_string(), // TODO: Return from create_token
-            explorer_url: format!("https://explorer.solana.com/tx/{}?cluster=devnet", signature),
-            signature,
-        })
+        let config = contract::TokenConfig {
+            name: params.name,
+            symbol: params.symbol,
+            uri: params.metadata_uri,
+            decimals: params.decimals,
+            initial_supply: params.initial_supply,
+            is_mutable: params.is_mutable,
+            freeze_authority: params.freeze_authority,
+        };
+        
+        contract::create_token(config).await
     }
 }
 

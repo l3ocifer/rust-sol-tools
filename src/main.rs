@@ -21,8 +21,8 @@ async fn main() -> std::io::Result<()> {
             .service(create_token_route)
             .leptos_routes(
                 leptos_options.clone(),
-                generate_route_list(|cx| view! { cx, <sol_tools::app::App/> }),
-                |cx| view! { cx, <sol_tools::app::App/> }
+                generate_route_list(|| view! { <sol_tools::app::App/> }),
+                || view! { <sol_tools::app::App/> }
             )
             .app_data(web::Data::new(leptos_options))
     })
