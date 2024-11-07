@@ -1,28 +1,32 @@
-use solana_client::rpc_client::RpcClient;
-use solana_program::system_instruction;
-use solana_sdk::{
-    commitment_config::CommitmentConfig,
-    pubkey::Pubkey,
-    signature::{read_keypair_file, Keypair, Signer},
-    transaction::Transaction,
+#[cfg(not(target_arch = "wasm32"))]
+use {
+    solana_client::rpc_client::RpcClient,
+    solana_program::system_instruction,
+    solana_sdk::{
+        commitment_config::CommitmentConfig,
+        pubkey::Pubkey,
+        signature::{read_keypair_file, Keypair, Signer},
+        transaction::Transaction,
+    },
+    spl_associated_token_account::{self, get_associated_token_address},
+    spl_token::state::Mint,
+    mpl_token_metadata::{
+        instructions as token_metadata_instruction,
+        types::DataV2,
+    },
 };
-use spl_associated_token_account::{self, get_associated_token_address};
-use spl_token::state::Mint;
-use mpl_token_metadata::instructions as token_metadata_instruction;
-use mpl_token_metadata::types::DataV2;
-use borsh::ser::BorshSerialize;
 
 #[derive(serde::Deserialize)]
-struct Env {
-    rpc_url: String,
-    signer_keypair_path: String,
-    token_name: String,
-    token_symbol: String,
-    token_uri: String,
-    token_decimals: u8,
-    initial_supply: u64,
-    recipient_address: Option<String>,
-    sample_amount: Option<u64>,
+pub struct Env {
+    pub rpc_url: String,
+    pub signer_keypair_path: String,
+    pub token_name: String,
+    pub token_symbol: String,
+    pub token_uri: String,
+    pub token_decimals: u8,
+    pub initial_supply: u64,
+    pub recipient_address: Option<String>,
+    pub sample_amount: Option<u64>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -161,4 +165,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    panic!("This binary is not meant to be run in the browser");
 } 

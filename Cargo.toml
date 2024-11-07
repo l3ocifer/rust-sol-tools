@@ -66,6 +66,14 @@ ssr = [
     "leptos_router/ssr",
     "dep:http"
 ]
+cli = [
+    "dep:solana-program",
+    "dep:solana-client",
+    "dep:solana-sdk",
+    "dep:spl-token",
+    "dep:spl-associated-token-account",
+    "dep:mpl-token-metadata"
+]
 
 [profile.wasm-release]
 inherits = "release"
@@ -92,3 +100,7 @@ lib-features = ["hydrate"]
 lib-default-features = false
 lib-profile-release = "wasm-release"
 bin-target = "sol-tools"
+
+[[bin]]
+name = "create_spl"
+required-features = ["cli"]

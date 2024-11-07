@@ -2,11 +2,11 @@
 use dotenv::dotenv;
 #[cfg(not(target_arch = "wasm32"))]
 use reqwest::Client;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 #[cfg(not(target_arch = "wasm32"))]
 use std::env;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Metadata {
     pub name: String,
     pub symbol: String,

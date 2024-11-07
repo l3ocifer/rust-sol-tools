@@ -21,9 +21,3 @@ pub fn hydrate() {
         }
     });
 }
-
-#[cfg(feature = "ssr")]
-pub fn register_server_functions() {
-    _ = CreateToken::register();
-    _ = UploadMetadata::register();
-}
