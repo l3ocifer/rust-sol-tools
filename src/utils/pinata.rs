@@ -1,6 +1,9 @@
+#[cfg(not(target_arch = "wasm32"))]
 use dotenv::dotenv;
+#[cfg(not(target_arch = "wasm32"))]
 use reqwest::Client;
 use serde::Serialize;
+#[cfg(not(target_arch = "wasm32"))]
 use std::env;
 
 #[derive(Serialize)]
@@ -11,6 +14,7 @@ pub struct Metadata {
     pub image: String,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn upload_metadata_to_pinata(metadata: &Metadata) -> Result<String, Box<dyn std::error::Error>> {
     dotenv().ok();
     let api_key = env::var("PINATA_API_KEY")?;
@@ -28,4 +32,9 @@ pub async fn upload_metadata_to_pinata(metadata: &Metadata) -> Result<String, Bo
     let res_json: serde_json::Value = res.json().await?;
     let ipfs_hash = res_json["IpfsHash"].as_str().ok_or("Failed to get IPFS hash")?;
     Ok(format!("ipfs://{}", ipfs_hash))
+}
+
+#[cfg(target_arch = "wasm32")]
+pub async fn upload_metadata_to_pinata(_metadata: &Metadata) -> Result<String, Box<dyn std::error::Error>> {
+    Err("Metadata upload not supported in browser".into())
 } 
