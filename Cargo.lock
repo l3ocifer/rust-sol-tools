@@ -4483,7 +4483,7 @@ version = "0.1.0"
 dependencies = [
  "actix-files",
  "actix-web",
- "borsh 0.10.4",
+ "borsh 0.9.3",
  "console_error_panic_hook",
  "dotenv",
  "http 1.1.0",
