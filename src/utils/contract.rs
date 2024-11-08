@@ -1,5 +1,4 @@
-use borsh::{BorshSerialize, BorshDeserialize}; // Traits
-use borsh_derive::{BorshSerialize, BorshDeserialize}; // Derive macros
+use borsh::{BorshSerialize, BorshDeserialize}; // Traits and derive macros
 
 #[cfg(not(target_arch = "wasm32"))]
 use {

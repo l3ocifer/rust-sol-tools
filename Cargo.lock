@@ -4484,7 +4484,6 @@ dependencies = [
  "actix-files",
  "actix-web",
  "borsh 0.10.4",
- "borsh-derive 0.10.4",
  "console_error_panic_hook",
  "dotenv",
  "http 1.1.0",
