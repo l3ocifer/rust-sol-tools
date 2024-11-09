@@ -2,113 +2,145 @@
 
 :root {
   --primary-color: #00ff41;
-  --secondary-color: #003b00;
-  --background-color: #0c0c0c;
+  --background-color: #000000;
   --text-color: #00ff41;
-  --card-background: rgba(0, 255, 65, 0.05);
-  --font-family: "VT323", "Courier New", monospace;
-  --glow-effect: 0 0 10px rgba(0, 255, 65, 0.5);
-  --scanline: rgba(0, 255, 65, 0.1);
-}
-
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+  --border-color: #00ff41;
+  --font-family: "VT323", monospace;
+  --button-hover: rgba(0, 255, 65, 0.2);
 }
 
 @layer base {
   body {
     @apply m-0 p-0 min-h-screen;
-    font-family: var(--font-family);
     background-color: var(--background-color);
     color: var(--text-color);
-    text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
-
-    &::before {
-      content: "";
-      @apply fixed top-0 left-0 w-full h-full pointer-events-none;
-      background: repeating-linear-gradient(
-        0deg,
-        var(--scanline) 0%,
-        var(--scanline) 1px,
-        transparent 1px,
-        transparent 2px
-      );
-      animation: scanline 10s linear infinite;
-      opacity: 0.15;
-    }
+    font-family: var(--font-family);
   }
 }
 
 .header {
-  @apply bg-opacity-50 backdrop-blur-sm border-b border-primary-color p-4;
-  background-color: rgba(12, 12, 12, 0.8);
-
+  @apply fixed top-0 left-0 right-0 z-50 py-4 px-8;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+  
   .header-content {
     @apply container mx-auto flex justify-between items-center;
-  }
-
-  .home-link {
-    @apply text-primary-color hover:text-opacity-80 transition-colors;
+    max-width: 1200px;
+    
+    .home-link {
+      @apply text-2xl no-underline border border-primary-color px-6 py-2 rounded;
+      color: var(--primary-color);
+      
+      &:hover {
+        background: var(--button-hover);
+      }
+    }
+    
+    h1 {
+      @apply text-4xl font-normal;
+      letter-spacing: 0.1em;
+    }
   }
 }
 
 .container {
-  @apply max-w-4xl mx-auto p-4;
+  @apply max-w-6xl mx-auto px-8 pt-32 pb-16;
+  min-height: 100vh;
+}
+
+.features {
+  @apply grid gap-16 mt-16;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+.feature-card {
+  @apply flex flex-col items-center gap-6 p-12 rounded-lg;
+  border: 1px solid var(--border-color);
+  
+  h3 {
+    @apply text-4xl font-normal mb-4;
+    letter-spacing: 0.1em;
+  }
+  
+  p {
+    @apply text-xl text-center mb-8;
+  }
 }
 
 .button {
-  @apply bg-transparent text-primary-color border border-primary-color px-6 py-2 rounded 
-         cursor-pointer transition-all duration-300 hover:bg-primary-color hover:text-background-color
-         hover:shadow-glow;
+  @apply px-12 py-3 text-xl border rounded cursor-pointer bg-transparent;
+  color: var(--primary-color);
+  border-color: var(--border-color);
+  font-family: var(--font-family);
+  letter-spacing: 0.1em;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: var(--button-hover);
+  }
+  
+  &:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    &:hover {
+      background-color: transparent;
+    }
+  }
 }
 
 .wallet-connect {
-  @apply m-4 flex items-center gap-4 flex-wrap justify-center;
-}
-
-.wallet-info {
-  @apply flex items-center gap-4 flex-wrap justify-center p-2 rounded
-         border border-primary-color bg-card-background;
-}
-
-.wallet-address {
-  @apply font-mono text-sm text-primary-color p-2 rounded max-w-[200px] 
-         overflow-hidden overflow-ellipsis whitespace-nowrap;
+  @apply flex items-center gap-4;
 }
 
 .wallet-buttons {
   @apply flex gap-4;
-}
-
-@media (max-width: 768px) {
-  .header {
-    @apply p-2;
-  }
   
-  .container {
-    @apply p-2;
-  }
-  
-  .wallet-connect {
-    @apply w-full justify-center mt-4;
-  }
-  
-  .wallet-buttons {
+  @media (max-width: 768px) {
     @apply flex-col;
+    
+    .button {
+      @apply w-full;
+    }
   }
 }
 
-.form-group {
-  @apply mb-4;
-
-  label {
-    @apply block text-primary-color text-sm font-bold mb-2;
+.wallet-info {
+  @apply flex items-center gap-4 px-6 py-3 rounded;
+  border: 1px solid var(--border-color);
+  
+  .wallet-address {
+    @apply text-lg;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+}
 
-  input[type="text"],
-  input[type="number"] {
-    @apply shadow appearance-none border border-primary-color rounded w-full py-2 px-3
-           bg-transparent text-primary-color leading-tight focus:outline-none focus:shadow-glow;
+.token-form {
+  @apply max-w-2xl mx-auto mt-16 p-8 rounded;
+  border: 1px solid var(--border-color);
+  
+  .form-group {
+    @apply mb-6;
+    
+    label {
+      @apply block mb-2 text-xl;
+    }
+    
+    input, textarea {
+      @apply w-full p-3 rounded bg-transparent border text-lg;
+      color: var(--primary-color);
+      border-color: var(--border-color);
+      font-family: var(--font-family);
+      
+      &:focus {
+        @apply outline-none;
+        background-color: var(--button-hover);
+      }
+      
+      &::placeholder {
+        color: rgba(0, 255, 65, 0.5);
+      }
+    }
   }
 }

@@ -40,7 +40,7 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     view! {
         <div class="container">
-            <h2>"Token Management"</h2>
+            <h2 class="text-5xl text-center mb-16">"Token Management"</h2>
             <div class="features">
                 <div class="feature-card">
                     <h3>"Create Token"</h3>
