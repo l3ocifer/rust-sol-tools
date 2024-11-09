@@ -6,10 +6,6 @@ mod metamask;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use solana_sdk::pubkey::Pubkey;
-use solana_client::rpc_client::RpcClient;
-use solana_client::rpc_filter::TokenAccountsFilter;
-use std::str::FromStr;
 
 #[cfg(target_arch = "wasm32")]
 pub use phantom::connect_phantom;
@@ -34,15 +30,11 @@ pub enum WalletType {
 #[derive(Clone)]
 pub struct WalletContext {
     pub state: RwSignal<WalletState>,
-    connection: Arc<RpcClient>,
 }
 
 impl WalletContext {
     pub fn new(state: RwSignal<WalletState>) -> Self {
-        Self {
-            state,
-            connection: Arc::new(RpcClient::new("https://api.devnet.solana.com".to_string())),
-        }
+        Self { state }
     }
 
     pub fn set_error(&self, error: &str) {
@@ -80,36 +72,6 @@ impl WalletContext {
         }
 
         result
-    }
-
-    pub async fn get_sol_balance(&self) -> Result<f64, String> {
-        if let Some(address) = &self.state.get().address {
-            let pubkey = Pubkey::from_str(address)
-                .map_err(|e| e.to_string())?;
-            let balance = self.connection
-                .get_balance(&pubkey)
-                .map_err(|e| e.to_string())?;
-            Ok(balance as f64 / 1_000_000_000.0)
-        } else {
-            Err("Wallet not connected".to_string())
-        }
-    }
-
-    pub async fn get_token_balance(&self) -> Result<f64, String> {
-        if let Some(address) = &self.state.get().address {
-            let pubkey = Pubkey::from_str(address)
-                .map_err(|e| e.to_string())?;
-            let token_accounts = self.connection
-                .get_token_accounts_by_owner(&pubkey, TokenAccountsFilter::ProgramId(spl_token::id()))
-                .map_err(|e| e.to_string())?;
-            
-            let total: f64 = token_accounts.iter()
-                .map(|account| account.account.data.token_amount.ui_amount.unwrap_or(0.0))
-                .sum();
-            Ok(total)
-        } else {
-            Err("Wallet not connected".to_string())
-        }
     }
 }
 
