@@ -31,12 +31,13 @@ pub async fn upload_file_to_pinata(file: File, api_key: &str, api_secret: &str) 
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod pinata_client {
-    use reqwest::multipart::{Form, Part};
+    use reqwest::Client;
     use anyhow::Result;
     use serde_json::Value;
+    use reqwest::multipart::{Form, Part};
 
     pub async fn upload_metadata_to_pinata(api_key: &str, api_secret: &str, metadata: &Value) -> Result<String> {
-        let client = reqwest::Client::new();
+        let client = Client::new();
         let json_str = serde_json::to_string(metadata)?;
         let part = Part::text(json_str).file_name("metadata.json");
         let form = Form::new().part("file", part);

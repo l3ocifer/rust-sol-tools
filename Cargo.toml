@@ -39,6 +39,18 @@ web-sys = { version = "0.3.66", features = [
 ]}
 js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
+reqwest = { version = "0.11", features = ["multipart", "json"] }
+solana-program = "1.18"
+solana-sdk = "1.18"
+solana-client = "1.18"
+spl-token = "4.0"
+spl-associated-token-account = "2.0"
+spl-token-2022 = "0.9"
+mpl-token-metadata = "4.0"
+mpl-token-auth-rules = "1.4"
+bs58 = "0.5"
+zstd = "0.11"
+env_logger = "0.11"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 leptos = { version = "0.6.5", features = ["csr", "hydrate", "nightly"] }
