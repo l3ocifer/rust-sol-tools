@@ -1,7 +1,9 @@
 pub mod app;
 pub mod wallet;
-pub mod upload;
 pub mod token;
+
+#[cfg(feature = "ssr")]
+pub mod upload;
 
 #[cfg(feature = "ssr")]
 pub mod routes;
