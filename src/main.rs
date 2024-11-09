@@ -7,7 +7,7 @@ use {
         web, 
         App as ActixApp, 
         HttpServer,
-        middleware::{Logger, Compress, NormalizePath}
+        middleware::Logger,
     },
     leptos_actix::{generate_route_list, LeptosRoutes},
     sol_tools::routes::{metadata::upload_metadata, contract::create_token_route}
@@ -17,10 +17,8 @@ use {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use leptos_config::get_configuration;
-    use actix_web::middleware::Logger;
     use env_logger::Env;
 
-    // Initialize logger
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     let conf = get_configuration(None).await.unwrap();
@@ -31,7 +29,6 @@ async fn main() -> std::io::Result<()> {
         
         ActixApp::new()
             .wrap(Logger::default())
-            .wrap(NormalizePath::trim())
             .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
             .service(upload_metadata)
             .service(create_token_route)
@@ -43,9 +40,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(leptos_options))
     })
     .workers(2)
-    .backlog(1024)
-    .keep_alive(std::time::Duration::from_secs(60))
-    .client_request_timeout(std::time::Duration::from_secs(60))
     .bind(&addr)?
     .run()
     .await
