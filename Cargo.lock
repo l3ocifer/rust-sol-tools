@@ -4523,6 +4523,7 @@ dependencies = [
  "actix-files",
  "actix-rt",
  "actix-web",
+ "anyhow",
  "borsh 0.10.4",
  "console_error_panic_hook",
  "dotenv",
