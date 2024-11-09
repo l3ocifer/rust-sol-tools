@@ -3,10 +3,14 @@ use borsh::{BorshSerialize, BorshDeserialize};
 #[cfg(not(target_arch = "wasm32"))]
 use {
     solana_client::rpc_client::RpcClient,
-    solana_program::{pubkey::Pubkey, system_instruction, system_program, sysvar},
+    solana_program::{
+        program_pack::Pack,
+        pubkey::Pubkey,
+        system_instruction,
+        system_program,
+    },
     solana_sdk::{
         commitment_config::CommitmentConfig,
-        program_pack::Pack,
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
@@ -15,10 +19,11 @@ use {
         state::Mint,
     },
     mpl_token_metadata::{
+        id as TOKEN_METADATA_PROGRAM_ID,
         instruction::create_metadata_accounts_v3,
-        state::DataV2,
-        ID as TOKEN_METADATA_PROGRAM_ID,
     },
+    mpl_token_metadata::instruction::CreateMetadataAccountsV3InstructionArgs,
+    mpl_token_metadata::state::DataV2,
 };
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
@@ -44,7 +49,10 @@ pub struct TokenCreationResult {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
+pub async fn create_token(
+    payer: &Keypair,
+    config: TokenConfig,
+) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
     let rpc_client = RpcClient::new_with_commitment(
         "https://api.devnet.solana.com".to_string(),
         CommitmentConfig::confirmed(),
@@ -61,48 +69,54 @@ pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenC
             Mint::LEN as u64,
             &spl_token_2022::id(),
         ),
-    ];
-
-    instructions.push(
-        token_instruction::initialize_mint2(
+        token_instruction::initialize_mint(
             &spl_token_2022::id(),
             &mint_account.pubkey(),
             &payer.pubkey(),
             Some(&payer.pubkey()),
             config.decimals,
         )?,
+    ];
+
+    // Find metadata account PDA
+    let metadata_seeds = &[
+        b"metadata",
+        TOKEN_METADATA_PROGRAM_ID().as_ref(),
+        mint_account.pubkey().as_ref(),
+    ];
+    let (metadata_account, _) = Pubkey::find_program_address(
+        metadata_seeds,
+        &TOKEN_METADATA_PROGRAM_ID(),
     );
 
-    let (metadata_account, _) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            TOKEN_METADATA_PROGRAM_ID.as_ref(),
-            mint_account.pubkey().as_ref(),
-        ],
-        &TOKEN_METADATA_PROGRAM_ID,
+    // Create metadata instruction
+    let metadata_data = DataV2 {
+        name: config.name.clone(),
+        symbol: config.symbol.clone(),
+        uri: config.uri.clone(),
+        seller_fee_basis_points: 0,
+        creators: None,
+        collection: None,
+        uses: None,
+    };
+
+    let metadata_args = CreateMetadataAccountsV3InstructionArgs {
+        data: metadata_data,
+        is_mutable: config.is_mutable,
+        collection_details: None,
+    };
+
+    let create_metadata_ix = create_metadata_accounts_v3(
+        TOKEN_METADATA_PROGRAM_ID(),
+        metadata_account,
+        mint_account.pubkey(),
+        payer.pubkey(),
+        payer.pubkey(),
+        payer.pubkey(),
+        metadata_args,
     );
-    
-    instructions.push(
-        create_metadata_accounts_v3(
-            TOKEN_METADATA_PROGRAM_ID,
-            metadata_account,
-            mint_account.pubkey(),
-            payer.pubkey(),
-            payer.pubkey(),
-            payer.pubkey(),
-            config.name,
-            config.symbol,
-            config.uri,
-            None,
-            0,
-            config.is_mutable,
-            None,
-            None,
-            None,
-            None,
-            None,
-        ),
-    );
+
+    instructions.push(create_metadata_ix);
 
     let recent_blockhash = rpc_client.get_latest_blockhash()?;
     let transaction = Transaction::new_signed_with_payer(
@@ -114,7 +128,7 @@ pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenC
 
     let signature = rpc_client.send_and_confirm_transaction(&transaction)?;
     let mint_address = mint_account.pubkey().to_string();
-    
+
     Ok(TokenCreationResult {
         status: "success".to_string(),
         mint: mint_address.clone(),
@@ -124,6 +138,8 @@ pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenC
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn create_token(_config: TokenConfig) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
+pub async fn create_token(
+    _config: TokenConfig,
+) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
     Err("Token creation not supported in browser".into())
 } 
