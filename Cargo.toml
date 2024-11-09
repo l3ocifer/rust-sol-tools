@@ -30,11 +30,14 @@ getrandom = { version = "0.2", features = ["js"] }
 # Server dependencies
 actix-web = { version = "4.4", features = ["rustls"], optional = true }
 actix-files = { version = "0.6.2", optional = true }
-tokio = { version = "1.36", features = ["full"], optional = true }
-mio = { version = "0.8.11", optional = true }
+tokio = { version = "1.36", features = ["full", "net"], optional = true }
+tokio-util = { version = "0.7", features = ["net"], optional = true }
 http = { version = "0.2", optional = true }
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], optional = true }
 dotenv = { version = "0.15", optional = true }
+
+# Add explicit socket dependencies
+socket2 = { version = "0.5", features = ["all"], optional = true }
 
 # Solana dependencies
 solana-program = { version = "1.16.14", optional = true }
@@ -58,7 +61,8 @@ ssr = [
     "dep:actix-files",
     "dep:leptos_actix",
     "dep:tokio",
-    "dep:mio",
+    "dep:tokio-util",
+    "dep:socket2",
     "dep:http",
     "dep:reqwest",
     "dep:dotenv",
