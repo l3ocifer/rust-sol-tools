@@ -410,18 +410,19 @@ fn WalletConnect() -> impl IntoView {
     let state = wallet_ctx.state;
     let (sol_balance, set_sol_balance) = create_signal(0.0);
     let (token_balance, set_token_balance) = create_signal(0.0);
-    let (balance_error, set_balance_error) = create_signal(None::<String>);
+    let (_balance_error, set_balance_error) = create_signal(None::<String>);
+    
+    let wallet_ctx = store_value(wallet_ctx);
     
     create_effect(move |_| {
         if state.get().connected {
+            let ctx = wallet_ctx.get_value();
             spawn_local(async move {
-                match wallet_ctx.get_sol_balance().await {
-                    Ok(balance) => set_sol_balance.set(balance),
-                    Err(e) => set_balance_error.set(Some(e)),
+                if let Ok(balance) = ctx.get_sol_balance().await {
+                    set_sol_balance.set(balance);
                 }
-                match wallet_ctx.get_token_balance().await {
-                    Ok(balance) => set_token_balance.set(balance),
-                    Err(e) => set_balance_error.set(Some(e)),
+                if let Ok(balance) = ctx.get_token_balance().await {
+                    set_token_balance.set(balance);
                 }
             });
         }
