@@ -27,7 +27,7 @@ dotenv = { version = "0.15", optional = true }
 borsh = "0.10.3"
 getrandom = { version = "0.2", features = ["js"] }
 
-# Optional Server-only dependencies
+# Optional server-only dependencies
 actix-web = { version = "4", default-features = false, features = ["rustls"], optional = true }
 actix-files = { version = "0.6", optional = true }
 leptos_actix = { version = "0.6.5", optional = true }
@@ -45,26 +45,25 @@ spl-token-2022 = { version = "0.9.0", optional = true }
 mpl-token-metadata = { version = "5.1.0", optional = true }
 mpl-token-auth-rules = { version = "1.5.1", optional = true }
 
-[dependencies.backend]
-actix-web = { version = "4", default-features = false, features = ["rustls"] }
-actix-files = "0.6"
-leptos_actix = "0.6.5"
-tokio = { version = "1", features = ["full"] }
-http = "1.0.0"
-reqwest = { version = "0.11", default-features = false, features = ["json", "native-tls-vendored"] }
-dotenv = "0.15"
-solana-program = "1.16.14"
-solana-sdk = "1.16.14"
-solana-client = "1.16.14"
-spl-token = "4.0.0"
-spl-associated-token-account = "2.0.0"
-spl-token-2022 = "0.9.0"
-mpl-token-metadata = "5.1.0"
-mpl-token-auth-rules = "1.5.1"
-
 [features]
 default = []
-ssr = ["backend"]
+ssr = [
+    "actix-web",
+    "actix-files",
+    "leptos_actix",
+    "tokio",
+    "http",
+    "reqwest",
+    "dotenv",
+    "solana-program",
+    "solana-sdk",
+    "solana-client",
+    "spl-token",
+    "spl-associated-token-account",
+    "spl-token-2022",
+    "mpl-token-metadata",
+    "mpl-token-auth-rules",
+]
 
 [[bin]]
 name = "sol-tools-bin"
