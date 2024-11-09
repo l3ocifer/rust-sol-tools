@@ -84,3 +84,4 @@ bin-target = "sol-tools"
 lib-package = "sol-tools"
 output-name = "sol-tools"
 root = "."
+end-args = ["--features", "ssr"]
