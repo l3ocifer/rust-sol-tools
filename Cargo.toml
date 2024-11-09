@@ -65,6 +65,16 @@ ssr = [
     "mpl-token-auth-rules",
 ]
 
+[[bin]]
+name = "sol-tools"
+path = "src/main.rs"
+required-features = ["ssr"]
+
+[[bin]]
+name = "create_spl"
+path = "src/bin/create_spl.rs"
+required-features = ["ssr"]
+
 [workspace]
 members = ["."]
 
@@ -73,11 +83,11 @@ output-name = "sol-tools"
 site-root = "target/site"
 site-pkg-dir = "pkg"
 site-addr = "127.0.0.1:3000"
-reload-port = "3001"
+reload-port = 3001
 env = "DEV"
+bin-target = "sol-tools"  # Specify the binary target for cargo-leptos
 
-# Specify the server binary and features
-server-path = "src/main.rs"
+# Additional features
 additional-features = ["ssr"]
 
 # Client build configurations
