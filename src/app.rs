@@ -427,7 +427,7 @@ fn WalletConnect() -> impl IntoView {
     let disconnect = create_action(move |_: &()| {
         let ctx = wallet_ctx_disconnect.clone();
         async move {
-            ctx.disconnect().await;
+            ctx.disconnect();
         }
     });
 

@@ -73,4 +73,9 @@ pub fn WalletProvider(children: Children) -> impl IntoView {
     });
 
     children()
+}
+
+pub async fn connect_metamask(wallet_context: &WalletContext) -> Result<(), JsValue> {
+    // Implementation for MetaMask connection
+    Ok(())
 } 

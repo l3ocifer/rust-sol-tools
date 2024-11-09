@@ -10,7 +10,9 @@ use {
         middleware::Logger,
     },
     leptos_actix::{generate_route_list, LeptosRoutes},
-    sol_tools::routes::{metadata::upload_metadata, contract::create_token_route}
+    sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
+    env_logger::Env,
+    leptos_config::get_configuration,
 };
 
 #[cfg(feature = "ssr")]
@@ -46,6 +48,12 @@ async fn main() -> std::io::Result<()> {
 }
 
 #[cfg(not(feature = "ssr"))]
-fn main() {
-    // no-op for client-side
+#[wasm_bindgen::prelude::wasm_bindgen(start)]
+pub fn main() {
+    use leptos::*;
+    _ = console_error_panic_hook::set_once();
+
+    mount_to_body(|| {
+        view! { <App/> }
+    });
 }
