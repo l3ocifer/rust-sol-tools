@@ -32,12 +32,8 @@ pub struct WalletContext {
 impl WalletContext {
     pub async fn connect(&self, wallet_type: WalletType) -> Result<(), String> {
         match wallet_type {
-            WalletType::Phantom => connect_phantom(self)
-                .await
-                .map_err(|e| e.as_string().unwrap_or_default()),
-            WalletType::MetaMask => connect_metamask(self)
-                .await
-                .map_err(|e| e.as_string().unwrap_or_default()),
+            WalletType::Phantom => connect_phantom(self).await,
+            WalletType::MetaMask => connect_metamask(self).await,
         }
     }
 
@@ -75,7 +71,7 @@ pub fn WalletProvider(children: Children) -> impl IntoView {
     children()
 }
 
-pub async fn connect_metamask(wallet_context: &WalletContext) -> Result<(), JsValue> {
+pub async fn connect_metamask(wallet_context: &WalletContext) -> Result<(), String> {
     // Implementation for MetaMask connection
     Ok(())
 } 
