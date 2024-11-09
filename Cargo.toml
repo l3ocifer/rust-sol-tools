@@ -38,8 +38,7 @@ actix-files = { version = "0.6.2", optional = true }
 actix-rt = { version = "2.9", optional = true }
 tokio = { version = "1.36", features = ["rt-multi-thread", "macros", "fs", "io-util", "net"], optional = true }
 futures = { version = "0.3", optional = true }
-http = { version = "0.2", optional = true }
-reqwest = { version = "0.11", features = ["json"], default-features = false, optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["json"], optional = true }
 
 # Solana dependencies
 solana-program = { version = "1.18", optional = true }
@@ -71,7 +70,6 @@ ssr = [
     "dep:actix-rt",
     "dep:tokio",
     "dep:futures",
-    "dep:http",
     "dep:reqwest",
     "dep:env_logger",
     "dep:leptos_actix",
@@ -108,10 +106,14 @@ features = ["ssr", "hydrate"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # Move zstd-dependent crates here
-reqwest = { version = "0.11", features = ["json", "rustls-tls"], optional = true }
+reqwest = { version = "0.11", features = ["json", "rustls-tls", "gzip"], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-rayon = "1.0"
 console_error_panic_hook = "0.1"
 # Add wasm-specific reqwest
-reqwest = { version = "0.11", features = ["json"], default-features = false, optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["json"] }
+getrandom = { version = "0.2", features = ["js"] }
+wasm-bindgen = "0.2.89"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
