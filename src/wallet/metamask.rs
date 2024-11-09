@@ -63,6 +63,7 @@ pub async fn connect_metamask(wallet_context: &WalletContext) -> Result<(), Stri
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
+        let _ = wallet_context;
         Err("MetaMask connection not supported on this platform".to_string())
     }
 } 

@@ -62,6 +62,7 @@ pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), Strin
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
+        let _ = wallet_context;
         Err("Phantom wallet connection not supported on this platform".to_string())
     }
 }
