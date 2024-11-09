@@ -31,7 +31,37 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-#[cfg(not(feature = "ssr"))]
-pub fn main() {
-    mount_to_body(|| view! { <sol_tools::app::App/> });
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    use crate::App;
+    use leptos::*;
+
+    leptos::mount_to_body(|| {
+        view! { <App/> }
+    });
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn main() {
+    use actix_files::Files;
+    use actix_web::{middleware, App as ActixApp, HttpServer};
+    use crate::routes::create_token_route;
+
+    #[actix_web::main]
+    async fn server_main() -> std::io::Result<()> {
+        HttpServer::new(|| {
+            ActixApp::new()
+                .wrap(middleware::Logger::default())
+                .service(create_token_route)
+                .service(Files::new("/", "./static").index_file("index.html"))
+            // ... Add other services or middleware
+        })
+        .bind("127.0.0.1:3000")?
+        .run()
+        .await
+    }
+
+    if let Err(e) = server_main().await {
+        eprintln!("Server error: {}", e);
+    }
 }

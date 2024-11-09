@@ -7,7 +7,6 @@ use {
         program_pack::Pack,
         pubkey::Pubkey,
         system_instruction,
-        sysvar,
     },
     solana_sdk::{
         commitment_config::CommitmentConfig,

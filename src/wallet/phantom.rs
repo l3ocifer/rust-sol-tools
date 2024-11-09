@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::window;
-use js_sys::{Function, Promise, Reflect, Object, Array};
+use js_sys::{Function, Promise, Reflect, Object};
 use leptos::SignalUpdate;
 use super::WalletContext;
 
