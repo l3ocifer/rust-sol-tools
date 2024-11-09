@@ -2,17 +2,21 @@ use leptos::*;
 use sol_tools::app::App;
 
 #[cfg(feature = "ssr")]
-use leptos_actix::{generate_route_list, LeptosRoutes};
-#[cfg(feature = "ssr")]
-use actix_web::{web, App as ActixApp, HttpServer, middleware::Logger, middleware::Compress, middleware::NormalizePath};
-#[cfg(feature = "ssr")]
-use sol_tools::routes::{metadata::upload_metadata, contract::create_token_route};
+use {
+    actix_web::{
+        web, 
+        App as ActixApp, 
+        HttpServer,
+        middleware::{Logger, Compress, NormalizePath}
+    },
+    leptos_actix::{generate_route_list, LeptosRoutes},
+    sol_tools::routes::{metadata::upload_metadata, contract::create_token_route}
+};
 
 #[cfg(feature = "ssr")]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use leptos_config::get_configuration;
-    use actix_web::middleware;
 
     let conf = get_configuration(None).await.unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -21,9 +25,9 @@ async fn main() -> std::io::Result<()> {
         let leptos_options = conf.leptos_options.clone();
         
         ActixApp::new()
-            .wrap(middleware::Logger::default())
-            .wrap(middleware::Compress::default())
-            .wrap(middleware::NormalizePath::trim())
+            .wrap(Logger::default())
+            .wrap(Compress::default())
+            .wrap(NormalizePath::trim())
             .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
             .service(upload_metadata)
             .service(create_token_route)
@@ -45,5 +49,5 @@ async fn main() -> std::io::Result<()> {
 
 #[cfg(not(feature = "ssr"))]
 fn main() {
-    // Client-side entry point (can be left empty)
+    // no-op for client-side
 }
