@@ -4,7 +4,6 @@ mod metamask;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 use web_sys::console;
-use wasm_bindgen::JsValue;
 
 pub use phantom::connect_phantom;
 pub use metamask::connect_metamask;
@@ -31,14 +30,18 @@ pub struct WalletContext {
 }
 
 impl WalletContext {
-    pub async fn connect(&self, wallet_type: WalletType) {
+    pub async fn connect(&self, wallet_type: WalletType) -> Result<(), String> {
         match wallet_type {
-            WalletType::Phantom => connect_phantom(self).await,
-            WalletType::MetaMask => connect_metamask(self).await,
+            WalletType::Phantom => connect_phantom(self)
+                .await
+                .map_err(|e| e.as_string().unwrap_or_default()),
+            WalletType::MetaMask => connect_metamask(self)
+                .await
+                .map_err(|e| e.as_string().unwrap_or_default()),
         }
     }
 
-    pub async fn disconnect(&self) {
+    pub fn disconnect(&self) {
         self.set_state.update(|state| {
             state.connected = false;
             state.address = None;
@@ -47,11 +50,10 @@ impl WalletContext {
         });
     }
 
-    pub(crate) fn set_error(&self, message: &str) {
+    pub fn set_error(&self, error: &str) {
         self.set_state.update(|state| {
-            state.error = Some(message.to_string());
+            state.error = Some(error.to_string());
         });
-        console::error_1(&JsValue::from_str(message));
     }
 }
 
