@@ -408,7 +408,25 @@ fn SendTokenPage() -> impl IntoView {
 fn WalletConnect() -> impl IntoView {
     let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
     let state = wallet_ctx.state;
+    let (sol_balance, set_sol_balance) = create_signal(0.0);
+    let (token_balance, set_token_balance) = create_signal(0.0);
+    let (balance_error, set_balance_error) = create_signal(None::<String>);
     
+    create_effect(move |_| {
+        if state.get().connected {
+            spawn_local(async move {
+                match wallet_ctx.get_sol_balance().await {
+                    Ok(balance) => set_sol_balance.set(balance),
+                    Err(e) => set_balance_error.set(Some(e)),
+                }
+                match wallet_ctx.get_token_balance().await {
+                    Ok(balance) => set_token_balance.set(balance),
+                    Err(e) => set_balance_error.set(Some(e)),
+                }
+            });
+        }
+    });
+
     let wallet_ctx_phantom = wallet_ctx.clone();
     let connect_phantom = create_action(move |_: &()| {
         let ctx = wallet_ctx_phantom.clone();
@@ -443,6 +461,16 @@ fn WalletConnect() -> impl IntoView {
                 view! {
                     <div class="wallet-info">
                         <span class="wallet-address">{state.get().address.clone().unwrap_or_default()}</span>
+                        <div class="balance-info">
+                            <div class="balance-item">
+                                <span class="balance-label">"SOL Balance:"</span>
+                                <span class="balance-value">{format!("{:.4} SOL", sol_balance.get())}</span>
+                            </div>
+                            <div class="balance-item">
+                                <span class="balance-label">"Token Balance:"</span>
+                                <span class="balance-value">{format!("{:.2}", token_balance.get())}</span>
+                            </div>
+                        </div>
                         <button class="button" on:click=move |_| disconnect.dispatch(())>
                             "Disconnect"
                         </button>

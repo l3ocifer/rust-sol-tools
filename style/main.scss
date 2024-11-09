@@ -40,54 +40,73 @@
 }
 
 .container {
-  @apply w-full max-w-6xl mx-auto px-8 flex flex-col items-center justify-center min-h-screen pt-32;
+  @apply w-full max-w-7xl mx-auto flex flex-col items-center justify-center;
+  margin-top: 120px;
+  padding: 0 24px;
+  text-align: center;
 }
 
-.features, .token-forms {
-  @apply w-full grid gap-24 place-items-start;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.token-management {
+  @apply text-6xl text-center mb-24;
+  letter-spacing: 0.2em;
+  color: var(--primary-color);
+  width: 100%;
 }
 
-.feature-card, .token-form {
-  @apply flex flex-col items-center justify-between gap-8 p-16 w-full;
+.features {
+  @apply w-full grid gap-12;
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  @apply flex flex-col items-center justify-between text-center;
   background-color: var(--dark-green);
   border: 1px solid var(--border-color);
-  min-height: 300px;
+  min-height: 250px;
+  padding: 48px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 550px;
   
   h3 {
-    @apply text-4xl font-normal mt-4;
+    @apply text-4xl font-normal text-center;
     letter-spacing: 0.2em;
+    width: 100%;
   }
   
   p {
-    @apply text-2xl text-center;
+    @apply text-2xl text-center my-8;
     letter-spacing: 0.1em;
+    width: 100%;
   }
 }
 
 .button {
-  @apply px-12 py-3 text-xl border cursor-pointer bg-transparent text-center;
+  @apply text-xl cursor-pointer bg-transparent text-center;
   color: var(--primary-color);
   border: 1px solid var(--border-color);
   font-family: var(--font-family);
   letter-spacing: 0.1em;
-  background-color: var(--dark-green);
-  min-width: 160px;
+  background-color: transparent;
 }
 
 .token-form {
-  @apply max-w-none mt-0;
+  @apply max-w-2xl mx-auto mt-0 text-center;
+  width: 100%;
   
   .form-group {
-    @apply mb-8 w-full;
+    @apply mb-8 w-full text-center;
     
     label {
-      @apply block mb-2 text-xl;
+      @apply block mb-2 text-xl text-center;
       letter-spacing: 0.1em;
+      width: 100%;
     }
     
     input, textarea {
-      @apply w-full p-4 bg-transparent border text-lg;
+      @apply w-full p-4 text-center;
       color: var(--primary-color);
       border: 1px solid var(--border-color);
       font-family: var(--font-family);
@@ -116,32 +135,44 @@
 }
 
 .wallet-connect {
-  @apply flex items-center justify-end gap-4;
+  @apply fixed top-6 right-8 flex flex-col items-end gap-4;
+  z-index: 60;
 }
 
 .wallet-buttons {
   @apply flex gap-4;
-  
-  @media (max-width: 768px) {
-    @apply flex-col;
-    
-    .button {
-      @apply w-full;
-    }
-  }
 }
 
 .wallet-info {
-  @apply flex items-center gap-4 px-6 py-3;
+  @apply flex flex-col items-end gap-2 px-6 py-3;
   background-color: var(--dark-green);
   border: 1px solid var(--border-color);
+  min-width: 280px;
   
   .wallet-address {
-    @apply text-lg;
+    @apply text-lg text-right;
     max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .balance-info {
+    @apply flex flex-col items-end gap-1 w-full mt-2 pt-2;
+    border-top: 1px solid rgba(0, 255, 65, 0.2);
+
+    .balance-item {
+      @apply flex justify-between w-full;
+      font-size: 0.9rem;
+
+      .balance-label {
+        @apply opacity-80;
+      }
+
+      .balance-value {
+        @apply font-bold;
+      }
+    }
   }
 }
 
@@ -163,5 +194,38 @@
   
   .feature-card, .token-form {
     @apply p-8;
+  }
+
+  .wallet-connect {
+    @apply relative top-0 right-0 w-full;
+    margin-left: auto;
+  }
+
+  .wallet-info {
+    @apply w-full items-center;
+    min-width: unset;
+
+    .wallet-address {
+      @apply text-center;
+    }
+
+    .balance-info {
+      @apply items-center;
+      
+      .balance-item {
+        @apply justify-center gap-4;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  
+  .feature-card {
+    max-width: 100%;
   }
 }

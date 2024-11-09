@@ -5,6 +5,13 @@ mod metamask;
 
 use leptos::*;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use solana_sdk::{
+    pubkey::Pubkey,
+    signature::Keypair,
+    signer::Signer,
+};
+use wasm_bindgen::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
 pub use phantom::connect_phantom;
@@ -28,8 +35,8 @@ pub enum WalletType {
 
 #[derive(Clone)]
 pub struct WalletContext {
-    pub state: ReadSignal<WalletState>,
-    pub(crate) set_state: WriteSignal<WalletState>,
+    pub state: RwSignal<WalletState>,
+    connection: Arc<Connection>,
 }
 
 impl WalletContext {
@@ -47,7 +54,7 @@ impl WalletContext {
     }
 
     pub fn disconnect(&self) {
-        self.set_state.update(|state| {
+        self.state.update(|state| {
             state.connected = false;
             state.address = None;
             state.wallet_type = None;
@@ -57,9 +64,33 @@ impl WalletContext {
     }
 
     pub fn set_error(&self, error: &str) {
-        self.set_state.update(|state| {
+        self.state.update(|state| {
             state.error = Some(error.to_string());
         });
+    }
+
+    pub async fn get_sol_balance(&self) -> Result<f64, String> {
+        if let Some(pubkey) = self.state.get().address {
+            let balance = self.connection
+                .get_balance(&pubkey)
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(balance as f64 / 1_000_000_000.0) // Convert lamports to SOL
+        } else {
+            Err("Wallet not connected".to_string())
+        }
+    }
+
+    pub async fn get_token_balance(&self) -> Result<f64, String> {
+        if let Some(pubkey) = self.state.get().address {
+            let token_balance = self.connection
+                .get_token_account_balance(&pubkey)
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(token_balance.ui_amount.unwrap_or(0.0))
+        } else {
+            Err("Wallet not connected".to_string())
+        }
     }
 }
 
@@ -75,7 +106,7 @@ pub fn WalletProvider(children: Children) -> impl IntoView {
 
     provide_context(WalletContext {
         state,
-        set_state,
+        connection: Arc::new(Connection::new()),
     });
 
     children()
