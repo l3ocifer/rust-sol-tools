@@ -411,7 +411,9 @@ fn WalletConnect() -> impl IntoView {
     let connect_phantom = create_action(move |_: &()| {
         let ctx = wallet_ctx_phantom.clone();
         async move {
-            ctx.connect(WalletType::Phantom).await;
+            if let Err(e) = ctx.connect(WalletType::Phantom).await {
+                ctx.set_error(&e);
+            }
         }
     });
     
@@ -419,7 +421,9 @@ fn WalletConnect() -> impl IntoView {
     let connect_metamask = create_action(move |_: &()| {
         let ctx = wallet_ctx_metamask.clone();
         async move {
-            ctx.connect(WalletType::MetaMask).await;
+            if let Err(e) = ctx.connect(WalletType::MetaMask).await {
+                ctx.set_error(&e);
+            }
         }
     });
     
@@ -436,7 +440,7 @@ fn WalletConnect() -> impl IntoView {
             {move || if state.get().connected {
                 view! {
                     <div class="wallet-info">
-                        <span class="wallet-address">{state.get().address.unwrap_or_default()}</span>
+                        <span class="wallet-address">{state.get().address.clone().unwrap_or_default()}</span>
                         <button class="button" on:click=move |_| disconnect.dispatch(())>
                             "Disconnect"
                         </button>
