@@ -8,8 +8,6 @@ use leptos::SignalUpdate;
 pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), String> {
     #[cfg(target_arch = "wasm32")]
     {
-        use wasm_bindgen::JsCast;
-
         let window = window().ok_or("No window object")?;
         let solana = Reflect::get(&window, &JsValue::from_str("solana"))
             .map_err(|_| "No solana object in window")?;
