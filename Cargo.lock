@@ -4268,7 +4268,6 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
- "mime_guess",
  "native-tls",
  "once_cell",
  "percent-encoding",
@@ -4971,7 +4970,6 @@ dependencies = [
  "serde_json",
  "sha2 0.10.8",
  "solana-client",
- "solana-program",
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
@@ -4981,7 +4979,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "zstd 0.11.2+zstd.1.5.2",
 ]
 
 [[package]]

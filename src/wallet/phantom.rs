@@ -2,7 +2,6 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen::JsCast;
 use crate::wallet::{WalletContext, WalletType};
-use leptos::SignalUpdate;
 
 pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), String> {
     #[cfg(target_arch = "wasm32")]
@@ -21,7 +20,6 @@ pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), Strin
             return Err("Phantom wallet not installed".to_string());
         }
         
-        // Request connection
         let connect_fn = js_sys::Reflect::get(&solana, &JsValue::from_str("connect"))
             .map_err(|_| "Failed to get connect function")?
             .dyn_into::<js_sys::Function>()
@@ -48,11 +46,12 @@ pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), Strin
         let address = address_js_value.as_string()
             .ok_or("Invalid address format")?;
         
-        wallet_context.set_state.update(|state| {
+        wallet_context.state.update(|state| {
             state.connected = true;
             state.address = Some(address);
             state.wallet_type = Some(WalletType::Phantom);
             state.error = None;
+            state.connecting = false;
         });
         
         Ok(())

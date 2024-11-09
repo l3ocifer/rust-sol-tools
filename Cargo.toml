@@ -6,10 +6,6 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[[bin]]
-name = "sol-tools"
-path = "src/main.rs"
-
 [dependencies]
 leptos = { version = "0.6.5", features = ["nightly"] }
 leptos_meta = { version = "0.6.5", features = ["nightly"] }
@@ -25,14 +21,6 @@ borsh = "0.10.3"
 thiserror = "1.0"
 bs58 = "0.5"
 env_logger = "0.11"
-solana-sdk = "1.18"
-solana-client = "1.18"
-spl-token = "4.0"
-spl-associated-token-account = "2.0"
-spl-token-2022 = "0.9"
-mpl-token-metadata = "4.0"
-mpl-token-auth-rules = "1.4"
-zstd = "0.11"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "0.2.89", features = ["serde"] }
@@ -44,19 +32,14 @@ web-sys = { version = "0.3.66", features = [
     "RequestInit", "RequestMode", "Request",
     "Crypto", "SubtleCrypto", "CryptoKey",
     "DomStringMap", "Storage", "Performance",
-    "PerformanceTiming", "console", "Navigator",
-    "Permissions", "PermissionStatus"
+    "PerformanceTiming", "console", "Navigator"
 ]}
 serde-wasm-bindgen = "0.6"
 gloo = { version = "0.11", features = ["storage"] }
 gloo-utils = "0.2"
 reqwasm = "0.5.0"
 getrandom = { version = "0.2", features = ["js"] }
-leptos = { version = "0.6.5", features = ["csr", "hydrate", "nightly"] }
-reqwest = { version = "0.11", features = ["json"] }
-solana-sdk = { version = "1.18", features = ["wasm"] }
-solana-client = { version = "1.18", features = ["wasm"] }
-spl-token = { version = "4.0", features = ["wasm"] }
+leptos = { version = "0.6.5", features = ["csr", "nightly"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 leptos = { version = "0.6.5", features = ["ssr", "nightly"] }
@@ -64,11 +47,10 @@ leptos_actix = "0.6.5"
 actix-web = { version = "4.4", features = ["macros"] }
 actix-files = "0.6.2"
 actix-rt = "2.9"
-tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "fs", "io-util", "net"] }
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros"] }
 futures = "0.3"
-reqwest = { version = "0.11", features = ["json", "rustls-tls", "multipart"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
 hostname = "0.3"
-solana-program = "1.18"
 solana-sdk = "1.18"
 solana-client = "1.18"
 spl-token = "4.0"
@@ -76,7 +58,6 @@ spl-associated-token-account = "2.0"
 spl-token-2022 = "0.9"
 mpl-token-metadata = "4.0"
 mpl-token-auth-rules = "1.4"
-zstd = "0.11"
 
 [features]
 default = ["ssr"]
@@ -95,13 +76,6 @@ tailwind-config-file = "tailwind.config.js"
 site-addr = "127.0.0.1:3000"
 reload-port = 3001
 env = "DEV"
-bin-target = "sol-tools"
 bin-features = ["ssr"]
 lib-features = ["hydrate"]
-bin-default-features = false
-lib-default-features = false
-watch = true
-site-serve-dir = "target/site"
-
-[workspace]
-members = ["."]
+bin-target = "sol-tools"

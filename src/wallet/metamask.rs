@@ -2,7 +2,6 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::window;
 use js_sys::{Function, Promise, Object, Reflect, Array};
-use leptos::SignalUpdate;
 use super::WalletContext;
 
 pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
@@ -14,7 +13,7 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
         return Err("MetaMask not installed".to_string());
     }
 
-    ctx.set_state.update(|state| {
+    ctx.state.update(|state| {
         state.connecting = true;
         state.error = None;
     });
@@ -50,7 +49,7 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     let address = accounts_array.get(0).as_string()
         .ok_or("Invalid address format")?;
 
-    ctx.set_state.update(|state| {
+    ctx.state.update(|state| {
         state.connected = true;
         state.address = Some(address);
         state.wallet_type = Some(super::WalletType::MetaMask);

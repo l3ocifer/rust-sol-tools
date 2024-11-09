@@ -1,53 +1,26 @@
+use actix_files::Files;
+use actix_web::*;
 use leptos::*;
-use sol_tools::app::App;
+use leptos_actix::{generate_route_list, LeptosRoutes};
+use sol_tools::app::*;
 
-#[cfg(not(target_arch = "wasm32"))]
-use {
-    actix_files::Files,
-    actix_web::{App as ActixApp, HttpServer, middleware::Logger},
-    leptos_actix::{generate_route_list, LeptosRoutes},
-    sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
-    env_logger::Env,
-    leptos_config::get_configuration,
-};
-
-#[cfg(not(target_arch = "wasm32"))]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::init_from_env(Env::default().default_filter_or("info"));
-
-    // Create required directories
-    std::fs::create_dir_all("target/site/public")?;
-    std::fs::create_dir_all("target/site/assets")?;
-    std::fs::create_dir_all("target/site/pkg")?;
-
     let conf = get_configuration(None).await.unwrap();
-    let leptos_options = conf.leptos_options.clone();
-    let addr = leptos_options.site_addr;
-    let routes = generate_route_list(|| view! { <App/> });
+    let addr = conf.leptos_options.site_addr;
+    let routes = generate_route_list(App);
 
     HttpServer::new(move || {
-        let leptos_options = &leptos_options;
-        let site_root = leptos_options.site_root.clone();
+        let leptos_options = &conf.leptos_options;
+        let site_root = &leptos_options.site_root;
 
-        ActixApp::new()
-            .wrap(Logger::default())
-            .leptos_routes(
-                leptos_options.clone(),
-                routes.clone(),
-                || view! { <App/> }
-            )
-            .service(Files::new("/pkg", format!("{}/pkg", site_root)))
-            .service(Files::new("/public", format!("{}/public", site_root)))
-            .service(Files::new("/assets", format!("{}/assets", site_root)))
-            .service(upload_metadata)
-            .service(create_token_route)
-            .service(Files::new("/", site_root).index_file("index.html"))
+        App::new()
+            .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
+            .leptos_routes(leptos_options.clone(), routes.clone(), App)
+            .service(Files::new("/", site_root))
+            .wrap(middleware::Compress::default())
     })
     .bind(&addr)?
     .run()
     .await
 }
-
-#[cfg(target_arch = "wasm32")]
-fn main() {}
