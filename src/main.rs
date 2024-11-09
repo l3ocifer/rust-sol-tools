@@ -3,6 +3,7 @@ use sol_tools::app::App;
 
 #[cfg(not(target_arch = "wasm32"))]
 use {
+    actix_files::Files,
     actix_web::{App as ActixApp, HttpServer, middleware::Logger},
     leptos_actix::{generate_route_list, LeptosRoutes},
     sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
@@ -18,12 +19,15 @@ async fn main() -> std::io::Result<()> {
     let conf = get_configuration(None).await.unwrap();
     let leptos_options = conf.leptos_options.clone();
     let addr = leptos_options.site_addr;
-
     let routes = generate_route_list(|| view! { <App/> });
 
     HttpServer::new(move || {
+        let leptos_options = &leptos_options;
+        let site_root = leptos_options.site_root.clone();
+
         ActixApp::new()
             .wrap(Logger::default())
+            .service(Files::new("/", site_root.clone()))
             .service(upload_metadata)
             .service(create_token_route)
             .leptos_routes(
@@ -31,8 +35,12 @@ async fn main() -> std::io::Result<()> {
                 routes.clone(),
                 || view! { <App/> },
             )
+            .service(Files::new("/pkg", format!("{}/pkg", site_root)))
     })
     .bind(&addr)?
     .run()
     .await
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

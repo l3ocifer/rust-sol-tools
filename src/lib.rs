@@ -2,19 +2,16 @@ pub mod app;
 pub mod wallet;
 pub mod token;
 
-#[cfg(not(target_arch = "wasm32"))]
-pub mod upload;
-
-#[cfg(not(target_arch = "wasm32"))]
-pub mod routes;
-
-#[cfg(not(target_arch = "wasm32"))]
-pub mod utils;
-
 #[cfg(target_arch = "wasm32")]
 pub mod utils {
     pub mod pinata;
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+pub mod utils;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub mod routes;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen(start)]
