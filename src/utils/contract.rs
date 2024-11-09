@@ -20,12 +20,12 @@ use {
     },
     mpl_token_metadata::{
         ID as TOKEN_METADATA_PROGRAM_ID,
-        instructions::{
-            create_create_metadata_account_v3_instruction,
-            CreateMetadataAccountV3InstructionArgs,
-            CreateMetadataAccountV3,
+        instruction::{
+            create_metadata_accounts_v3,
+            CreateMetadataAccountsV3,
+            CreateMetadataAccountsV3InstructionArgs,
         },
-        types::DataV2,
+        state::DataV2,
     },
 };
 
@@ -103,24 +103,25 @@ pub async fn create_token(
     );
 
     // Create metadata accounts arguments
-    let accounts = CreateMetadataAccountV3 {
+    let accounts = CreateMetadataAccountsV3 {
         metadata: metadata_account,
         mint: mint_account.pubkey(),
-        mint_authority: (payer.pubkey(), false),
+        mint_authority: payer.pubkey(),
         payer: payer.pubkey(),
-        update_authority: payer.pubkey(),
+        update_authority: (payer.pubkey(), false),
         system_program: solana_program::system_program::ID,
-        rent: Some(sysvar::rent::ID),
+        rent: sysvar::rent::ID,
     };
 
-    let args = CreateMetadataAccountV3InstructionArgs {
+    let args = CreateMetadataAccountsV3InstructionArgs {
         data: metadata_data,
         is_mutable: config.is_mutable,
         collection_details: None,
     };
 
     // Create instruction
-    let create_metadata_ix = create_create_metadata_account_v3_instruction(
+    let create_metadata_ix = create_metadata_accounts_v3(
+        TOKEN_METADATA_PROGRAM_ID,
         accounts,
         args,
     );
