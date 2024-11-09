@@ -4931,7 +4931,6 @@ dependencies = [
  "leptos_actix",
  "leptos_meta",
  "leptos_router",
- "leptos_server",
  "log",
  "mpl-token-auth-rules",
  "mpl-token-metadata",

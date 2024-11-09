@@ -8,9 +8,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # Core dependencies
-leptos = { version = "0.6.15", default-features = false, features = ["macros", "csr"] }
-leptos_meta = "0.6.15"
-leptos_router = "0.6.15"
+leptos = { version = "0.6.5", features = ["csr", "nightly"] }
+leptos_meta = { version = "0.6.5" }
+leptos_router = { version = "0.6.5" }
 console_error_panic_hook = "0.1"
 log = "0.4"
 sha2 = "0.10"
@@ -23,9 +23,9 @@ serde-wasm-bindgen = "0.6"
 gloo = { version = "0.11", features = ["storage"] }
 gloo-utils = "0.2"
 reqwasm = "0.5.0"
-wasm-bindgen = { version = "0.2.86", features = ["serde"] }
-wasm-bindgen-futures = "0.4.36"
-web-sys = { version = "0.3", features = [
+wasm-bindgen = { version = "0.2.89", features = ["serde"] }
+wasm-bindgen-futures = "0.4.39"
+web-sys = { version = "0.3.66", features = [
     "Window", "Document", "Element", "HtmlElement", 
     "File", "Blob", "Url", "Response", "Headers",
     "RequestInit", "RequestMode", "Request",
@@ -33,21 +33,18 @@ web-sys = { version = "0.3", features = [
     "DomStringMap", "Storage", "Performance",
     "PerformanceTiming", "console"
 ]}
-js-sys = "0.3"
+js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
 
-[dev-dependencies]
-leptos = { version = "0.6.15", default-features = false, features = ["hydrate"] }
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-# Server-only dependencies
-leptos_actix = { version = "0.6.15" }
+leptos = { version = "0.6.5", features = ["ssr"] }
+leptos_actix = { version = "0.6.5" }
 actix-web = { version = "4.4", features = ["macros"] }
 actix-files = "0.6.2"
 actix-rt = "2.9"
-tokio = { version = "1.28", features = ["rt-multi-thread", "macros", "fs", "io-util", "net" ] }
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "fs", "io-util", "net"] }
 futures = "0.3"
-reqwest = { version = "0.11.27", features = ["json", "rustls-tls"] }
+reqwest = { version = "0.11.23", features = ["json", "rustls-tls"] }
 solana-program = "1.18"
 solana-sdk = "1.18"
 solana-client = "1.18"
@@ -57,9 +54,8 @@ spl-token-2022 = "0.9"
 mpl-token-metadata = "4.0"
 mpl-token-auth-rules = "1.4"
 bs58 = "0.5"
-zstd = "0.11.2"
+zstd = "0.11"
 env_logger = "0.11"
-leptos_server = "0.6.15"
 
 [package.metadata.leptos]
 output-name = "sol-tools"
@@ -77,4 +73,3 @@ lib-profile-dev = "dev"
 browserquery = "defaults"
 watch = true
 watch-additional-files = ["./src/**/*"]
-features = ["hydrate"]
