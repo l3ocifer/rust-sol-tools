@@ -14,6 +14,7 @@ required-features = ["ssr"]
 [[bin]]
 name = "create_spl"
 path = "src/bin/create_spl.rs"
+required-features = ["ssr"]
 
 [dependencies]
 # Core dependencies
@@ -72,6 +73,8 @@ members = ["."]
 
 [[workspace.metadata.leptos]]
 name = "sol-tools"
+bin-package = "sol-tools"
+bin-target = "sol-tools"
 lib-package = "sol-tools"
 output-name = "sol-tools"
 root = "."
