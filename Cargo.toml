@@ -44,14 +44,22 @@ dotenv = "0.15"
 borsh = "0.10.3"
 
 # Token-related dependencies
-mpl-token-metadata = { version = "1.9.1", features = ["no-entrypoint"] }
-mpl-token-auth-rules = "1.3"
+solana-program = "1.16.14"
+solana-sdk = "1.16.14"
+solana-client = "1.16.14"
+spl-token = "4.0.0"
+spl-associated-token-account = "2.0.0"
+spl-token-2022 = "0.9.0"
+
+# Updated Metaplex dependencies
+mpl-token-metadata = "5.1.0"
+mpl-token-auth-rules = "1.5.1"
 
 [features]
 default = ["hydrate", "ssr"]
 hydrate = [
-    "leptos/hydrate", 
-    "leptos_meta/hydrate", 
+    "leptos/hydrate",
+    "leptos_meta/hydrate",
     "leptos_router/hydrate"
 ]
 ssr = [
@@ -67,14 +75,14 @@ ssr = [
 ]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-solana-program = "1.16"
-solana-client = "1.16"
-solana-sdk = "1.16"
-spl-token = "3.5"
-spl-token-2022 = "0.9"
-spl-associated-token-account = "1.1"
-mpl-token-metadata = { version = "1.9.1", features = ["no-entrypoint"] }
-mpl-token-auth-rules = "1.3"
+solana-program = "1.16.14"
+solana-client = "1.16.14"
+solana-sdk = "1.16.14"
+spl-token = "4.0.0"
+spl-token-2022 = "0.9.0"
+spl-associated-token-account = "2.0.0"
+mpl-token-metadata = "5.1.0"
+mpl-token-auth-rules = "1.5.1"
 
 [workspace]
 members = ["."]

@@ -11,9 +11,11 @@ use {
     spl_associated_token_account::{self, get_associated_token_address},
     spl_token::state::Mint,
     mpl_token_metadata::{
-        instruction as token_metadata_instruction,
-        state::DataV2,
+        instruction::create_metadata_accounts_v3,
+        state::{DataV2, Collection, Uses, Creator},
+        ID as TOKEN_METADATA_PROGRAM_ID,
     },
+    mpl_token_auth_rules::ID as TOKEN_AUTH_RULES_PROGRAM_ID,
 };
 
 #[derive(serde::Deserialize)]
@@ -117,35 +119,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (metadata_account, _) = Pubkey::find_program_address(
         &[
             b"metadata",
-            mpl_token_metadata::ID.as_ref(),
+            TOKEN_METADATA_PROGRAM_ID.as_ref(),
             mint_account.pubkey().as_ref(),
         ],
-        &mpl_token_metadata::ID,
+        &TOKEN_METADATA_PROGRAM_ID,
     );
 
-    let metadata = DataV2 {
-        name: env.token_name.clone(),
-        symbol: env.token_symbol.clone(),
-        uri: env.token_uri.clone(),
-        seller_fee_basis_points: 0,
-        creators: None,
-        collection: None,
-        uses: None,
-    };
-
-    instructions.push(
-        token_metadata_instruction::CreateMetadataAccountV3 {
-            metadata: metadata_account,
+    let create_metadata_ix = create_metadata_accounts_v3(
+        CreateMetadataAccountsV3InstructionArgs {
+            data: DataV2 {
+                name: env.token_name.clone(),
+                symbol: env.token_symbol.clone(),
+                uri: env.token_uri.clone(),
+                seller_fee_basis_points: 0,
+                creators: None,
+                collection: None,
+                uses: None,
+            },
+            is_mutable: true,
+            collection_details: None,
+            metadata_account,
             mint: mint_account.pubkey(),
             mint_authority: payer.pubkey(),
             payer: payer.pubkey(),
             update_authority: payer.pubkey(),
-            data: metadata,
-            is_mutable: true,
-            collection_details: None,
-            rule_set: None,
-        }.instruction(),
+            system_program: system_program::id(),
+            rent: sysvar::rent::id(),
+        },
     );
+
+    instructions.push(create_metadata_ix);
 
     // Execute transaction
     let recent_blockhash = client.get_latest_blockhash()?;
