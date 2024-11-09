@@ -26,20 +26,12 @@ async fn main() -> std::io::Result<()> {
             .service(create_token_route)
             .leptos_routes(
                 leptos_options.clone(),
-                generate_route_list(|cx| view! { cx, <App/> }),
-                |cx| view! { cx, <App/> }
+                generate_route_list(|| view! { <App/> }),
+                || view! { <App/> }
             )
             .app_data(web::Data::new(leptos_options))
     })
     .bind(&addr)?
     .run()
     .await
-}
-
-#[cfg(not(feature = "ssr"))]
-#[wasm_bindgen::prelude::wasm_bindgen(start)]
-pub fn main() {
-    use leptos::*;
-
-    leptos::mount_to_body(|| view! { <App/> });
 }
