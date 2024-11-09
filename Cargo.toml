@@ -41,6 +41,12 @@ web-sys = { version = "0.3.66", features = [
 js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
 
+[features]
+default = []
+hydrate = ["leptos/hydrate"]
+csr = ["leptos/csr"]
+ssr = ["leptos/ssr"]
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 leptos = { version = "0.6.5", features = ["csr", "hydrate", "nightly"] }
 
@@ -78,7 +84,7 @@ reload-port = 3001
 env = "DEV"
 bin-target = "sol-tools-server"
 bin-features = ["ssr"]
-lib-features = ["csr", "hydrate"]
+lib-features = ["hydrate"]
 bin-default-features = false
 lib-default-features = false
 watch = true
