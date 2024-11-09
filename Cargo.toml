@@ -65,23 +65,12 @@ actix-rt = "2.9"
 tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "fs", "io-util", "net"] }
 futures = "0.3"
 reqwest = { version = "0.11.23", features = ["json", "rustls-tls"] }
-solana-program = "1.18"
-solana-sdk = "1.18"
-solana-client = "1.18"
-spl-token = "4.0"
-spl-associated-token-account = "2.0"
-spl-token-2022 = "0.9"
-mpl-token-metadata = "4.0"
-mpl-token-auth-rules = "1.4"
-bs58 = "0.5"
-zstd = "0.11"
-env_logger = "0.11"
 
 [features]
 default = ["ssr"]
-hydrate = ["leptos/hydrate"]
+hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 csr = ["leptos/csr"]
-ssr = ["leptos/ssr"]
+ssr = ["leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr"]
 
 [package.metadata.leptos]
 output-name = "sol-tools"

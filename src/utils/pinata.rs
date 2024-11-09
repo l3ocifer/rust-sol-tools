@@ -1,36 +1,27 @@
-use anyhow::Result;
-use web_sys::File;
-
 #[cfg(target_arch = "wasm32")]
-pub async fn upload_file_to_pinata(file: File, api_key: &str, api_secret: &str) -> Result<String> {
-    let window = web_sys::window().ok_or_else(|| anyhow::anyhow!("No window object"))?;
-    let pinata = js_sys::Reflect::get(&window, &JsValue::from_str("uploadToPinata"))
-        .map_err(|_| anyhow::anyhow!("uploadToPinata function not found"))?;
+pub mod wasm {
+    use wasm_bindgen::prelude::*;
+    use web_sys::File;
+    use anyhow::Result;
 
-    let form_data = web_sys::FormData::new()
-        .map_err(|_| anyhow::anyhow!("Failed to create FormData"))?;
-    form_data.append_with_blob("file", &file)
-        .map_err(|_| anyhow::anyhow!("Failed to append file to FormData"))?;
+    #[wasm_bindgen(module = "/public/pinata.js")]
+    extern "C" {
+        #[wasm_bindgen(js_name = uploadToPinata)]
+        pub async fn upload_to_pinata(api_key: &str, api_secret: &str, data: JsValue) -> JsValue;
+    }
 
-    let promise = js_sys::Function::from(pinata)
-        .call2(
-            &JsValue::NULL,
-            &JsValue::from_str(api_key),
-            &JsValue::from_str(api_secret),
-        )
-        .map_err(|_| anyhow::anyhow!("Failed to call uploadToPinata"))?;
+    pub async fn upload_file_to_pinata(file: File, api_key: &str, api_secret: &str) -> Result<String> {
+        let result = upload_to_pinata(api_key, api_secret, file.into())
+            .await
+            .as_string()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get response from Pinata"))?;
 
-    let result = wasm_bindgen_futures::JsFuture::from(js_sys::Promise::from(promise))
-        .await
-        .map_err(|e| anyhow::anyhow!("Upload failed: {:?}", e))?;
-
-    result
-        .as_string()
-        .ok_or_else(|| anyhow::anyhow!("Invalid response format"))
+        Ok(result)
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub mod pinata_client {
+pub mod server {
     use reqwest::Client;
     use anyhow::Result;
     use serde_json::Value;
