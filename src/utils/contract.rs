@@ -20,12 +20,12 @@ use {
     },
     mpl_token_metadata::{
         ID as TOKEN_METADATA_PROGRAM_ID,
-        instruction::{
+        instructions::{
             create_create_metadata_account_v3_instruction,
             CreateMetadataAccountV3InstructionArgs,
+            CreateMetadataAccountV3,
         },
-        accounts::CreateMetadataAccountV3,
-        state::DataV2,
+        types::DataV2,
     },
 };
 
