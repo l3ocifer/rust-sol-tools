@@ -6,11 +6,15 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "sol-tools-server"
+path = "src/main.rs"
+
 [dependencies]
 # Core dependencies
-leptos = { version = "0.6.5", features = ["csr"] }
-leptos_meta = { version = "0.6.5" }
-leptos_router = { version = "0.6.5" }
+leptos = { version = "0.6.5", features = ["csr", "nightly"] }
+leptos_meta = { version = "0.6.5", features = ["nightly"] }
+leptos_router = { version = "0.6.5", features = ["nightly"] }
 console_error_panic_hook = "0.1"
 console_log = "1.0"
 log = "0.4"
@@ -38,7 +42,7 @@ js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-leptos = { version = "0.6.5", features = ["ssr"] }
+leptos = { version = "0.6.5", features = ["ssr", "nightly"] }
 leptos_actix = "0.6.5"
 actix-web = { version = "4.4", features = ["macros"] }
 actix-files = "0.6.2"
@@ -62,21 +66,19 @@ env_logger = "0.11"
 output-name = "sol-tools"
 site-root = "target/site"
 site-pkg-dir = "pkg"
+assets-dir = "assets"
+style-file = "style/main.scss"
+tailwind-input-file = "style/tailwind.css"
+tailwind-config-file = "tailwind.config.js"
 site-addr = "127.0.0.1:3000"
 reload-port = 3001
 env = "DEV"
+bin-target = "sol-tools-server"
 bin-features = []
 lib-features = ["csr"]
 bin-default-features = false
 lib-default-features = false
-lib-profile-release = "wasm-release"
-lib-profile-dev = "dev"
-style-file = "style/main.scss"
-assets-dir = "assets"
-site-root-relative = true
-browserquery = "defaults"
 watch = true
-watch-additional-files = ["./src/**/*"]
 
 [workspace]
 members = ["."]
