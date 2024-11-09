@@ -28,16 +28,12 @@ borsh = "0.10.3"
 getrandom = { version = "0.2", features = ["js"] }
 
 # Server dependencies
-actix-web = { version = "4.4", features = ["rustls"], optional = true }
+actix-web = { version = "4.4", default-features = false, features = ["macros"], optional = true }
 actix-files = { version = "0.6.2", optional = true }
-tokio = { version = "1.36", features = ["full", "net"], optional = true }
-tokio-util = { version = "0.7", features = ["net"], optional = true }
+tokio = { version = "1.36", features = ["full"], optional = true }
 http = { version = "0.2", optional = true }
-reqwest = { version = "0.11", features = ["json", "rustls-tls"], optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"], optional = true }
 dotenv = { version = "0.15", optional = true }
-
-# Add explicit socket dependencies
-socket2 = { version = "0.5", features = ["all"], optional = true }
 
 # Solana dependencies
 solana-program = { version = "1.16.14", optional = true }
@@ -61,8 +57,6 @@ ssr = [
     "dep:actix-files",
     "dep:leptos_actix",
     "dep:tokio",
-    "dep:tokio-util",
-    "dep:socket2",
     "dep:http",
     "dep:reqwest",
     "dep:dotenv",
@@ -90,13 +84,9 @@ bin-target = "sol-tools"
 style-file = "style/main.scss"
 assets-dir = "assets"
 site-root-relative = true
-
-# Build configuration
 lib-profile-release = "wasm-release"
 lib-profile-dev = "dev"
 browserquery = "defaults"
 watch = true
 watch-additional-files = ["./src/**/*"]
-
-# Feature configuration
 features = ["ssr", "hydrate"]
