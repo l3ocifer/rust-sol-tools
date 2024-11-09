@@ -1,12 +1,12 @@
 use leptos::*;
-use crate::app::App;
+use sol_tools::app::App;
 
 #[cfg(feature = "ssr")]
 use leptos_actix::{generate_route_list, LeptosRoutes};
 #[cfg(feature = "ssr")]
 use actix_web::{web, App as ActixApp, HttpServer, middleware::Logger};
 #[cfg(feature = "ssr")]
-use crate::routes::{metadata::upload_metadata, contract::create_token_route};
+use sol_tools::routes::{metadata::upload_metadata, contract::create_token_route};
 
 #[cfg(feature = "ssr")]
 #[actix_web::main]
@@ -41,5 +41,5 @@ async fn main() -> std::io::Result<()> {
 pub fn main() {
     use leptos::*;
 
-    leptos::mount_to_body(|cx| view! { cx, <App/> });
+    leptos::mount_to_body(|| view! { <App/> });
 }

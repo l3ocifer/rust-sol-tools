@@ -5,8 +5,8 @@ pub mod token;
 pub mod routes;
 pub mod utils;
 
-#[cfg(feature = "hydrate")]
-#[wasm_bindgen::prelude::wasm_bindgen]
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(start)]
 pub fn hydrate() {
     use app::*;
     use leptos::*;
@@ -15,7 +15,7 @@ pub fn hydrate() {
     
     logging::log!("Initializing application...");
     
-    mount_to_body(move || {
+    mount_to_body(|| {
         view! {
             <App/>
         }
