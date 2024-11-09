@@ -2,13 +2,13 @@ pub mod app;
 pub mod wallet;
 pub mod token;
 
-#[cfg(feature = "ssr")]
+#[cfg(not(target_arch = "wasm32"))]
 pub mod upload;
 
-#[cfg(feature = "ssr")]
+#[cfg(not(target_arch = "wasm32"))]
 pub mod routes;
 
-#[cfg(feature = "ssr")]
+#[cfg(not(target_arch = "wasm32"))]
 pub mod utils;
 
 #[cfg(target_arch = "wasm32")]
@@ -18,8 +18,6 @@ pub fn hydrate() {
     use leptos::*;
 
     _ = console_error_panic_hook::set_once();
-    
-    logging::log!("Initializing application...");
     
     mount_to_body(|| {
         view! {

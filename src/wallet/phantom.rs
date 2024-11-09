@@ -20,6 +20,7 @@ extern "C" {
     fn log(s: &str);
 }
 
+#[cfg(target_arch = "wasm32")]
 pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), JsValue> {
     let window = window().ok_or("No window object")?;
     let solana = Reflect::get(&window, &JsValue::from_str("solana"))?;
@@ -40,16 +41,21 @@ pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), JsVal
             Ok(())
         }
         Err(e) => {
-            wallet_context.set_error(&format!("Failed to connect: {}", e.as_string().unwrap_or_default()));
+            let error_message = e.as_string().unwrap_or_else(|| "Unknown error".to_string());
+            wallet_context.set_error(&format!("Failed to connect: {}", error_message));
             Ok(())
         }
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 fn is_phantom_installed(solana: &JsValue) -> Result<bool, JsValue> {
-    Ok(Reflect::get(solana, &JsValue::from_str("isPhantom"))?.as_bool().unwrap_or(false))
+    Ok(Reflect::get(solana, &JsValue::from_str("isPhantom"))?
+        .as_bool()
+        .unwrap_or(false))
 }
 
+#[cfg(target_arch = "wasm32")]
 async fn request_phantom_connection(solana: &JsValue) -> Result<String, JsValue> {
     let connect_fn = Reflect::get(solana, &JsValue::from_str("connect"))?
         .dyn_into::<Function>()?;

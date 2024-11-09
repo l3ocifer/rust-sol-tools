@@ -17,14 +17,12 @@ use solana_sdk::{
 use anyhow::{Result, anyhow};
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn load_keypair() -> Result<Keypair> {
-    let keypair_path = std::env::var("SOLANA_KEYPAIR_PATH")
-        .unwrap_or_else(|_| format!("{}/.config/solana/id.json", std::env::var("HOME").unwrap()));
-
+pub fn load_keypair_from_path(keypair_path: &str) -> Result<Keypair> {
     read_keypair_file(&keypair_path)
         .map_err(|e| anyhow!("Failed to load keypair from {}: {}", keypair_path, e))
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_env_keypair(env_var: &str) -> Result<Keypair> {
     let keypair_path = std::env::var(env_var)
         .map_err(|_| anyhow!("Environment variable {} not set", env_var))?;
@@ -33,6 +31,7 @@ pub fn load_env_keypair(env_var: &str) -> Result<Keypair> {
         .map_err(|e| anyhow!("Failed to load keypair from {}: {}", keypair_path, e))
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn read_json_file(path: &str) -> Result<String> {
     let mut file = File::open(path)?;
     let mut contents = String::new();

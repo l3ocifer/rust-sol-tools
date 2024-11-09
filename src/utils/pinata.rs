@@ -52,28 +52,33 @@ pub async fn upload_file_to_pinata(file: web_sys::File, api_key: &str, api_secre
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn upload_metadata_to_pinata(metadata: &Metadata, api_key: &str, api_secret: &str) -> anyhow::Result<String> {
-    // Server-side implementation using reqwest
-    let client = Client::new();
-    let url = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
+pub mod pinata_client {
+    use anyhow::Result;
+    use reqwest::Client;
+    use serde_json::Value;
 
-    let response = client
-        .post(url)
-        .header("Content-Type", "application/json")
-        .header("pinata_api_key", api_key)
-        .header("pinata_secret_api_key", api_secret)
-        .json(metadata)
-        .send()
-        .await?;
+    pub async fn upload_metadata_to_pinata(
+        api_key: &str,
+        api_secret: &str,
+        metadata: &Value,
+    ) -> Result<String> {
+        let client = Client::new();
+        let url = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
 
-    if response.status().is_success() {
-        let result: serde_json::Value = response.json().await?;
-        let ipfs_hash = result["IpfsHash"]
+        let res = client
+            .post(url)
+            .header("pinata_api_key", api_key)
+            .header("pinata_secret_api_key", api_secret)
+            .json(metadata)
+            .send()
+            .await?;
+
+        let json: Value = res.json().await?;
+        let ipfs_hash = json["IpfsHash"]
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("Invalid response from Pinata"))?;
+
         Ok(format!("https://gateway.pinata.cloud/ipfs/{}", ipfs_hash))
-    } else {
-        Err(anyhow::anyhow!("Failed to upload metadata to Pinata"))
     }
 }
 
