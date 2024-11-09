@@ -3,7 +3,7 @@ use sol_tools::app::App;
 
 #[cfg(not(target_arch = "wasm32"))]
 use {
-    actix_web::{web, App as ActixApp, HttpServer, middleware::Logger},
+    actix_web::{App as ActixApp, HttpServer, middleware::Logger},
     leptos_actix::{generate_route_list, LeptosRoutes},
     sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
     env_logger::Env,
@@ -19,7 +19,7 @@ async fn main() -> std::io::Result<()> {
     let leptos_options = conf.leptos_options.clone();
     let addr = leptos_options.site_addr;
 
-    let routes = generate_route_list(|cx| view! { cx, <App/> });
+    let routes = generate_route_list(|| view! { <App/> });
 
     HttpServer::new(move || {
         ActixApp::new()
@@ -27,9 +27,9 @@ async fn main() -> std::io::Result<()> {
             .service(upload_metadata)
             .service(create_token_route)
             .leptos_routes(
-                &leptos_options,
+                leptos_options.clone(),
                 routes.clone(),
-                |cx| view! { cx, <App/> },
+                || view! { <App/> },
             )
     })
     .bind(&addr)?
@@ -45,7 +45,7 @@ pub fn main() {
 
     _ = console_error_panic_hook::set_once();
 
-    leptos::mount_to_body(move || {
+    leptos::mount_to_body(|| {
         view! { <App/> }
     });
 }
