@@ -39,8 +39,6 @@ web-sys = { version = "0.3.66", features = [
 ]}
 js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
-reqwest = { version = "0.11", features = ["multipart", "json"] }
-gethostname = "0.4.3"
 solana-program = "1.18"
 solana-sdk = "1.18"
 solana-client = "1.18"
@@ -55,6 +53,7 @@ env_logger = "0.11"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 leptos = { version = "0.6.5", features = ["csr", "hydrate", "nightly"] }
+reqwest = { version = "0.11", features = ["json"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 leptos = { version = "0.6.5", features = ["ssr", "nightly"] }
@@ -64,7 +63,8 @@ actix-files = "0.6.2"
 actix-rt = "2.9"
 tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "fs", "io-util", "net"] }
 futures = "0.3"
-reqwest = { version = "0.11.23", features = ["json", "rustls-tls"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls", "multipart"] }
+hostname = "0.3"
 
 [features]
 default = ["ssr"]
