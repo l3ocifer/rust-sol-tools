@@ -17,8 +17,11 @@ use {
         instruction as token_instruction,
     },
     mpl_token_metadata::{
-        instruction::create_metadata_accounts_v3,
-        state::DataV2,
+        instructions::{
+            CreateMetadataAccountV3,
+            CreateMetadataAccountV3Instruction,
+        },
+        types::DataV2,
         ID as TOKEN_METADATA_PROGRAM_ID,
     },
 };
@@ -85,28 +88,26 @@ pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenC
     );
     
     instructions.push(
-        create_metadata_accounts_v3(
-            CreateMetadataAccountsV3InstructionArgs {
-                data: DataV2 {
-                    name: config.name,
-                    symbol: config.symbol,
-                    uri: config.uri,
-                    seller_fee_basis_points: 0,
-                    creators: None,
-                    collection: None,
-                    uses: None,
-                },
-                is_mutable: config.is_mutable,
-                collection_details: None,
-                metadata_account,
-                mint: mint_account.pubkey(),
-                mint_authority: payer.pubkey(),
-                payer: payer.pubkey(),
-                update_authority: (payer.pubkey(), true),
-                system_program: system_program::id(),
-                rent: Some(sysvar::rent::id()),
+        CreateMetadataAccountV3Instruction {
+            metadata: metadata_account,
+            mint: mint_account.pubkey(),
+            mint_authority: payer.pubkey(),
+            payer: payer.pubkey(),
+            update_authority: payer.pubkey(),
+            system_program: system_program::id(),
+            rent: sysvar::rent::id(),
+            data: DataV2 {
+                name: config.name,
+                symbol: config.symbol,
+                uri: config.uri,
+                seller_fee_basis_points: 0,
+                creators: None,
+                collection: None,
+                uses: None,
             },
-        ),
+            is_mutable: config.is_mutable,
+            collection_details: None,
+        }.into(),
     );
 
     let recent_blockhash = rpc_client.get_latest_blockhash()?;
