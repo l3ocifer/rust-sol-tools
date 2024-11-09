@@ -1,5 +1,12 @@
 use web_sys::File;
 use serde_json::Value;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen(module = "/public/pinata.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = uploadToPinata)]
+    pub async fn upload_to_pinata(api_key: &str, api_secret: &str, data: JsValue) -> JsValue;
+}
 
 pub async fn upload_image(_file: File) -> Result<String, String> {
     // Implementation for uploading to Arweave or IPFS

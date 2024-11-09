@@ -35,3 +35,8 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
+
+#[cfg(not(feature = "ssr"))]
+fn main() {
+    // Client-side entry point (can be left empty if not needed)
+}

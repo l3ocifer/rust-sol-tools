@@ -6,16 +6,6 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[[bin]]
-name = "sol-tools-bin"
-path = "src/main.rs"
-required-features = ["ssr"]
-
-[[bin]]
-name = "create_spl"
-path = "src/bin/create_spl.rs"
-required-features = ["ssr"]
-
 [dependencies]
 # Core dependencies
 leptos = { version = "0.6.5", features = ["nightly"] }
@@ -33,7 +23,7 @@ js-sys = "0.3"
 # Shared dependencies
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-dotenv = "0.15"
+dotenv = { version = "0.15", optional = true }
 borsh = "0.10.3"
 getrandom = { version = "0.2", features = ["js"] }
 
@@ -45,20 +35,24 @@ tokio = { version = "1", features = ["full"], optional = true }
 http = { version = "1.0.0", optional = true }
 reqwest = { version = "0.11", default-features = false, features = ["json", "native-tls-vendored"], optional = true }
 
-[features]
-default = []
+# Solana and related dependencies (optional)
+solana-program = { version = "1.16.14", optional = true }
+solana-sdk = { version = "1.16.14", optional = true }
+solana-client = { version = "1.16.14", optional = true }
+spl-token = { version = "4.0.0", optional = true }
+spl-associated-token-account = { version = "2.0.0", optional = true }
+spl-token-2022 = { version = "0.9.0", optional = true }
+mpl-token-metadata = { version = "5.1.0", optional = true }
+mpl-token-auth-rules = { version = "1.5.1", optional = true }
 
-ssr = [
-    "leptos_actix",
-    "actix-web",
-    "actix-files",
-    "tokio",
-    "http",
-    "reqwest/native-tls",
-]
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-# Solana and related dependencies
+[dependencies.backend]
+actix-web = { version = "4", default-features = false, features = ["rustls"] }
+actix-files = "0.6"
+leptos_actix = "0.6.5"
+tokio = { version = "1", features = ["full"] }
+http = "1.0.0"
+reqwest = { version = "0.11", default-features = false, features = ["json", "native-tls-vendored"] }
+dotenv = "0.15"
 solana-program = "1.16.14"
 solana-sdk = "1.16.14"
 solana-client = "1.16.14"
@@ -68,8 +62,23 @@ spl-token-2022 = "0.9.0"
 mpl-token-metadata = "5.1.0"
 mpl-token-auth-rules = "1.5.1"
 
+[features]
+default = []
+ssr = ["backend"]
+
+[[bin]]
+name = "sol-tools-bin"
+path = "src/main.rs"
+required-features = ["ssr"]
+
+[[bin]]
+name = "create_spl"
+path = "src/bin/create_spl.rs"
+required-features = ["ssr"]
+
 [workspace]
 members = ["."]
+default-members = ["sol-tools"]
 
 [[workspace.metadata.leptos]]
 name = "sol-tools"

@@ -5,6 +5,15 @@ use js_sys::{Function, Promise, Reflect, Object};
 use leptos::SignalUpdate;
 use super::WalletContext;
 
+#[wasm_bindgen(module = "/public/phantom.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = connectPhantomWallet)]
+    pub async fn connect_phantom_wallet() -> JsValue;
+
+    #[wasm_bindgen(js_name = createToken)]
+    pub async fn create_token(params: JsValue) -> JsValue;
+}
+
 pub async fn connect_phantom(wallet_context: &WalletContext) {
     match window() {
         Some(window) => {
