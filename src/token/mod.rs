@@ -1,5 +1,8 @@
 use serde::{Serialize, Deserialize};
 
+#[cfg(not(target_arch = "wasm32"))]
+use solana_sdk::signature::Keypair;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateTokenParams {
     pub name: String,
@@ -13,6 +16,9 @@ pub struct CreateTokenParams {
     pub rate_limit: Option<u64>,
     pub transfer_fee: Option<u16>,
     pub max_transfer_amount: Option<u64>,
+    #[cfg(not(target_arch = "wasm32"))]
+    #[serde(skip)]
+    pub payer: Option<Keypair>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,6 +35,8 @@ mod solana {
     use crate::utils::contract::{self, TokenConfig};
     
     pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
+        let payer = params.payer.as_ref().ok_or("Payer keypair is required")?;
+        
         let config = TokenConfig {
             name: params.name,
             symbol: params.symbol,
@@ -42,7 +50,7 @@ mod solana {
             max_transfer_amount: params.max_transfer_amount,
         };
         
-        let result = contract::create_token(config).await?;
+        let result = contract::create_token(payer, config).await?;
         Ok(TokenCreationResult {
             status: result.status,
             mint: result.mint,

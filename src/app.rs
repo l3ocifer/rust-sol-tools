@@ -102,6 +102,8 @@ fn CreateTokenPage() -> impl IntoView {
                 rate_limit: rate_limit.get_untracked(),
                 transfer_fee: transfer_fee.get_untracked(),
                 max_transfer_amount: max_transfer_amount.get_untracked(),
+                #[cfg(not(target_arch = "wasm32"))]
+                payer: None,
             };
 
             match create_token(params).await {

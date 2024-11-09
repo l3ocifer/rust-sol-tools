@@ -1,4 +1,4 @@
-use borsh::{BorshSerialize, BorshDeserialize}; // Traits and derive macros
+use borsh::{BorshSerialize, BorshDeserialize};
 
 #[cfg(not(target_arch = "wasm32"))]
 use {
@@ -6,20 +6,21 @@ use {
     solana_program::system_instruction,
     solana_sdk::{
         commitment_config::CommitmentConfig,
-        pubkey::Pubkey,
-        signature::{read_keypair_file, Keypair, Signer},
+        signature::{Keypair, Signer},
         transaction::Transaction,
+        program_pack::Pack,
     },
-    spl_associated_token_account::get_associated_token_address,
-    spl_token_2022::state::Mint,
+    spl_token_2022::{
+        state::Mint,
+        instruction as token_instruction,
+    },
     mpl_token_metadata::{
-        instruction as token_metadata_instruction,
-        state::{DataV2, TokenStandard},
+        instructions::{
+            CreateMetadataAccountV3InstructionArgs,
+            create_metadata_accounts_v3,
+        },
+        types::DataV2,
         pda::find_metadata_account,
-    },
-    mpl_token_auth_rules::{
-        instruction as auth_rules_instruction,
-        state::{RuleSetV1, RuleSetV2},
     },
 };
 
@@ -37,7 +38,7 @@ pub struct TokenConfig {
     pub max_transfer_amount: Option<u64>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct TokenCreationResult {
     pub status: String,
     pub mint: String,
@@ -46,13 +47,12 @@ pub struct TokenCreationResult {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn create_token(config: TokenConfig) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
+pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
     let rpc_client = RpcClient::new_with_commitment(
         "https://api.devnet.solana.com".to_string(),
         CommitmentConfig::confirmed(),
     );
 
-    let payer = read_keypair_file(&std::env::var("SOLANA_KEYPAIR_PATH")?)?;
     let mint_account = Keypair::new();
     let mint_rent = rpc_client.get_minimum_balance_for_rent_exemption(Mint::LEN)?;
 
@@ -66,88 +66,45 @@ pub async fn create_token(config: TokenConfig) -> Result<TokenCreationResult, Bo
         ),
     ];
 
-    // Initialize mint with Token2022 extensions
-    let mut mint_extensions = vec![];
-    
-    if config.rate_limit.is_some() {
-        mint_extensions.push(spl_token_2022::extension::rate_limit::instruction::initialize(
-            &spl_token_2022::id(),
-            &mint_account.pubkey(),
-            Some(&payer.pubkey()),
-            config.rate_limit.unwrap(),
-        )?);
-    }
-
-    if config.transfer_fee.is_some() {
-        mint_extensions.push(spl_token_2022::extension::transfer_fee::instruction::initialize(
-            &spl_token_2022::id(),
-            &mint_account.pubkey(),
-            Some(&payer.pubkey()),
-            config.transfer_fee.unwrap(),
-            0, // Transfer fee denominator
-        )?);
-    }
-
-    instructions.extend(mint_extensions);
-
-    // Initialize base mint
     instructions.push(
-        spl_token_2022::instruction::initialize_mint2(
+        token_instruction::initialize_mint2(
             &spl_token_2022::id(),
             &mint_account.pubkey(),
             &payer.pubkey(),
-            if config.freeze_authority { Some(&payer.pubkey()) } else { None },
+            Some(&payer.pubkey()),
             config.decimals,
         )?,
     );
 
-    // Create and initialize metadata
     let (metadata_account, _) = find_metadata_account(&mint_account.pubkey());
     
-    let metadata = DataV2 {
-        name: config.name,
-        symbol: config.symbol,
-        uri: config.uri,
-        seller_fee_basis_points: 0,
-        creators: None,
-        collection: None,
-        uses: None,
-    };
-
-    // Create rule set if needed
-    let rule_set = if config.max_transfer_amount.is_some() || 
-                     config.rate_limit.is_some() || 
-                     config.transfer_fee.is_some() {
-        Some(RuleSetV1 {
-            max_transfer_amount: config.max_transfer_amount,
-            rate_limit: config.rate_limit,
-            transfer_fee: config.transfer_fee,
-        })
-    } else {
-        None
-    };
-
     instructions.push(
-        token_metadata_instruction::CreateMetadataAccountV3 {
-            metadata: metadata_account,
-            mint: mint_account.pubkey(),
-            mint_authority: payer.pubkey(),
-            payer: payer.pubkey(),
-            update_authority: payer.pubkey(),
-            data: metadata,
-            is_mutable: config.is_mutable,
-            collection_details: None,
-            rule_set,
-        }
-        .instruction(),
+        create_metadata_accounts_v3(
+            CreateMetadataAccountV3InstructionArgs {
+                data: DataV2 {
+                    name: config.name,
+                    symbol: config.symbol,
+                    uri: config.uri,
+                    seller_fee_basis_points: 0,
+                    creators: None,
+                    collection: None,
+                    uses: None,
+                },
+                is_mutable: config.is_mutable,
+                collection_details: None,
+                mint: mint_account.pubkey(),
+                mint_authority: payer.pubkey(),
+                update_authority: payer.pubkey(),
+                payer: payer.pubkey(),
+            },
+        ),
     );
 
-    // Execute transaction
     let recent_blockhash = rpc_client.get_latest_blockhash()?;
     let transaction = Transaction::new_signed_with_payer(
         &instructions,
         Some(&payer.pubkey()),
-        &[&payer, &mint_account],
+        &[payer, &mint_account],
         recent_blockhash,
     );
 
