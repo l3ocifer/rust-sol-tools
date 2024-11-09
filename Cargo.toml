@@ -20,32 +20,31 @@ wasm-bindgen = "0.2.95"
 wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = ["Window", "Document", "File"] }
 js-sys = "0.3"
+getrandom = { version = "0.2", features = ["js"] }
 
 # Shared dependencies
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 borsh = "0.10.3"
-getrandom = { version = "0.2", features = ["js"] }
 
 # Server dependencies
-actix-web = { version = "4.4", features = ["macros", "rustls"], optional = true }
+actix-web = { version = "4.4", features = ["macros"], optional = true }
 actix-files = { version = "0.6.2", optional = true }
 actix-rt = { version = "2.9", optional = true }
 tokio = { version = "1.36", features = ["full"], optional = true }
 http = { version = "0.2", optional = true }
-reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"], optional = true }
+reqwest = { version = "0.11", features = ["json"], optional = true }
 dotenv = { version = "0.15", optional = true }
-mio = { version = "0.8.11", features = ["os-poll", "net"], optional = true }
 
-# Solana dependencies
-solana-program = { version = "1.16.14", optional = true }
-solana-sdk = { version = "1.16.14", optional = true }
-solana-client = { version = "1.16.14", optional = true }
-spl-token = { version = "4.0.0", optional = true }
-spl-associated-token-account = { version = "2.0.0", optional = true }
-spl-token-2022 = { version = "0.9.0", optional = true }
-mpl-token-metadata = { version = "5.1.0", optional = true }
-mpl-token-auth-rules = { version = "1.5.1", optional = true }
+# Solana dependencies - aligned versions
+solana-program = { version = "1.18", optional = true }
+solana-sdk = { version = "1.18", optional = true }
+solana-client = { version = "1.18", optional = true }
+spl-token = { version = "4.0", optional = true }
+spl-associated-token-account = { version = "2.0", optional = true }
+spl-token-2022 = { version = "0.9", optional = true }
+mpl-token-metadata = { version = "4.0", optional = true }
+mpl-token-auth-rules = { version = "1.4", optional = true }
 
 [features]
 default = ["ssr", "hydrate"]
@@ -58,8 +57,6 @@ ssr = [
     "dep:actix-web",
     "dep:actix-files",
     "dep:actix-rt",
-    "dep:mio",
-    "dep:leptos_actix",
     "dep:tokio",
     "dep:http",
     "dep:reqwest",
