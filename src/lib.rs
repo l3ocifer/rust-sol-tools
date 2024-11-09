@@ -2,7 +2,11 @@ pub mod app;
 pub mod wallet;
 pub mod upload;
 pub mod token;
+
+#[cfg(feature = "ssr")]
 pub mod routes;
+
+#[cfg(feature = "ssr")]
 pub mod utils;
 
 #[cfg(target_arch = "wasm32")]
