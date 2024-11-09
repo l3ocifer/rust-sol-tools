@@ -1,7 +1,8 @@
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use web_sys::SubmitEvent;
+#[cfg(target_arch = "wasm32")]
+use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::token::{create_token, CreateTokenParams};
 

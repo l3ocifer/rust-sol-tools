@@ -19,6 +19,7 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
         state.error = None;
     });
 
+    let ethereum_clone = ethereum.clone();
     let ethereum_obj = ethereum.dyn_into::<Object>()
         .map_err(|_| "Failed to cast ethereum object")?;
 
@@ -34,7 +35,7 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     Reflect::set(&request_obj, &JsValue::from_str("params"), &params)
         .map_err(|_| "Failed to set request params")?;
 
-    let promise = request_method.call1(&ethereum, &request_obj)
+    let promise = request_method.call1(&ethereum_clone, &request_obj)
         .map_err(|_| "Failed to call request method")?;
 
     let accounts = JsFuture::from(Promise::from(promise))
