@@ -17,6 +17,11 @@ use {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use leptos_config::get_configuration;
+    use actix_web::middleware::Logger;
+    use env_logger::Env;
+
+    // Initialize logger
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     let conf = get_configuration(None).await.unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -26,7 +31,6 @@ async fn main() -> std::io::Result<()> {
         
         ActixApp::new()
             .wrap(Logger::default())
-            .wrap(Compress::default())
             .wrap(NormalizePath::trim())
             .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
             .service(upload_metadata)
