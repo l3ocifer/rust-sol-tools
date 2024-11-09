@@ -6,7 +6,7 @@
   --text-color: #00ff41;
   --border-color: #00ff41;
   --font-family: "VT323", monospace;
-  --button-hover: rgba(0, 255, 65, 0.2);
+  --dark-green: #003300;
 }
 
 @layer base {
@@ -19,76 +19,101 @@
 }
 
 .header {
-  @apply fixed top-0 left-0 right-0 z-50 py-4 px-8;
-  background-color: var(--background-color);
+  @apply fixed top-0 left-0 w-full py-6;
+  background-color: var(--dark-green);
   border-bottom: 1px solid var(--border-color);
+  z-index: 50;
   
   .header-content {
-    @apply container mx-auto flex justify-between items-center;
-    max-width: 1200px;
+    @apply w-full max-w-6xl mx-auto px-8 flex justify-between items-center;
     
     .home-link {
-      @apply text-2xl no-underline border border-primary-color px-6 py-2 rounded;
+      @apply text-2xl no-underline border border-primary-color px-6 py-2 min-w-[120px] text-center;
       color: var(--primary-color);
-      
-      &:hover {
-        background: var(--button-hover);
-      }
     }
     
     h1 {
-      @apply text-4xl font-normal;
-      letter-spacing: 0.1em;
+      @apply text-6xl font-normal text-center absolute left-1/2 transform -translate-x-1/2;
+      letter-spacing: 0.2em;
     }
   }
 }
 
 .container {
-  @apply max-w-6xl mx-auto px-8 pt-32 pb-16;
-  min-height: 100vh;
+  @apply w-full max-w-6xl mx-auto px-8 flex flex-col items-center justify-center min-h-screen pt-32;
+}
+
+.token-management {
+  @apply text-6xl text-center mb-24;
+  letter-spacing: 0.2em;
 }
 
 .features {
-  @apply grid gap-16 mt-16;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  @apply w-full grid gap-24 place-items-center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .feature-card {
-  @apply flex flex-col items-center gap-6 p-12 rounded-lg;
+  @apply flex flex-col items-center justify-between gap-8 p-16 w-full max-w-xl;
+  background-color: var(--dark-green);
   border: 1px solid var(--border-color);
+  min-height: 300px;
   
   h3 {
-    @apply text-4xl font-normal mb-4;
-    letter-spacing: 0.1em;
+    @apply text-4xl font-normal mt-4;
+    letter-spacing: 0.2em;
   }
   
   p {
-    @apply text-xl text-center mb-8;
+    @apply text-2xl text-center;
+    letter-spacing: 0.1em;
   }
 }
 
 .button {
-  @apply px-12 py-3 text-xl border rounded cursor-pointer bg-transparent;
+  @apply px-12 py-3 text-xl border cursor-pointer bg-transparent text-center;
   color: var(--primary-color);
-  border-color: var(--border-color);
+  border: 1px solid var(--border-color);
   font-family: var(--font-family);
   letter-spacing: 0.1em;
-  transition: background-color 0.2s ease;
+  background-color: var(--dark-green);
+  min-width: 160px;
+}
+
+.token-form {
+  @apply w-full max-w-2xl mx-auto mt-16 p-8;
+  background-color: var(--dark-green);
+  border: 1px solid var(--border-color);
   
-  &:hover {
-    background-color: var(--button-hover);
-  }
-  
-  &:disabled {
-    @apply opacity-50 cursor-not-allowed;
-    &:hover {
-      background-color: transparent;
+  .form-group {
+    @apply mb-8;
+    
+    label {
+      @apply block mb-2 text-xl;
+      letter-spacing: 0.1em;
+    }
+    
+    input, textarea {
+      @apply w-full p-4 bg-transparent border text-lg;
+      color: var(--primary-color);
+      border: 1px solid var(--border-color);
+      font-family: var(--font-family);
+      letter-spacing: 0.1em;
+      
+      &:focus {
+        @apply outline-none;
+        background-color: rgba(0, 255, 65, 0.05);
+      }
+      
+      &::placeholder {
+        color: rgba(0, 255, 65, 0.3);
+      }
     }
   }
 }
 
 .wallet-connect {
-  @apply flex items-center gap-4;
+  @apply flex items-center justify-end gap-4;
 }
 
 .wallet-buttons {
@@ -104,7 +129,8 @@
 }
 
 .wallet-info {
-  @apply flex items-center gap-4 px-6 py-3 rounded;
+  @apply flex items-center gap-4 px-6 py-3;
+  background-color: var(--dark-green);
   border: 1px solid var(--border-color);
   
   .wallet-address {
@@ -116,31 +142,27 @@
   }
 }
 
-.token-form {
-  @apply max-w-2xl mx-auto mt-16 p-8 rounded;
-  border: 1px solid var(--border-color);
+// Mobile responsiveness
+@media (max-width: 768px) {
+  .header {
+    .header-content {
+      @apply px-4;
+      
+      h1 {
+        @apply text-4xl;
+      }
+    }
+  }
   
-  .form-group {
-    @apply mb-6;
-    
-    label {
-      @apply block mb-2 text-xl;
-    }
-    
-    input, textarea {
-      @apply w-full p-3 rounded bg-transparent border text-lg;
-      color: var(--primary-color);
-      border-color: var(--border-color);
-      font-family: var(--font-family);
-      
-      &:focus {
-        @apply outline-none;
-        background-color: var(--button-hover);
-      }
-      
-      &::placeholder {
-        color: rgba(0, 255, 65, 0.5);
-      }
-    }
+  .features {
+    @apply grid-cols-1 gap-12;
+  }
+  
+  .feature-card {
+    @apply p-8;
+  }
+  
+  .token-form {
+    @apply p-4;
   }
 }
