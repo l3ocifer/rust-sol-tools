@@ -4,7 +4,7 @@ use sol_tools::app::App;
 #[cfg(not(target_arch = "wasm32"))]
 use {
     actix_files::Files,
-    actix_web::{App as ActixApp, HttpServer, middleware::Logger, web},
+    actix_web::{App as ActixApp, HttpServer, middleware::Logger},
     leptos_actix::{generate_route_list, LeptosRoutes},
     sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
     env_logger::Env,
@@ -15,6 +15,11 @@ use {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
+
+    // Create required directories
+    std::fs::create_dir_all("target/site/public")?;
+    std::fs::create_dir_all("target/site/assets")?;
+    std::fs::create_dir_all("target/site/pkg")?;
 
     let conf = get_configuration(None).await.unwrap();
     let leptos_options = conf.leptos_options.clone();
