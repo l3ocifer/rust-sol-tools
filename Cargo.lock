@@ -138,7 +138,7 @@ dependencies = [
  "actix-utils",
  "futures-core",
  "futures-util",
- "mio",
+ "mio 1.0.2",
  "socket2",
  "tokio",
  "tracing",
@@ -2560,6 +2560,7 @@ dependencies = [
  "tracing",
  "typed-builder",
  "typed-builder-macro",
+ "wasm-bindgen",
  "web-sys",
 ]
 
@@ -2707,6 +2708,7 @@ dependencies = [
  "cfg-if",
  "futures",
  "indexmap 2.6.0",
+ "js-sys",
  "oco_ref",
  "paste",
  "pin-project",
@@ -2719,7 +2721,9 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "wasm-bindgen",
  "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -2997,6 +3001,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2d80299ef12ff69b16a84bb182e3b9df68b5a91574d3d4fa6e41b65deec4df1"
 dependencies = [
  "adler2",
+]
+
+[[package]]
+name = "mio"
+version = "0.8.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4a650543ca06a924e8b371db273b2756685faae30f8487da1b56505a8f78b0c"
+dependencies = [
+ "libc",
+ "log",
+ "wasi 0.11.0+wasi-snapshot-preview1",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -4570,6 +4586,7 @@ dependencies = [
  "leptos_meta",
  "leptos_router",
  "log",
+ "mio 0.8.11",
  "mpl-token-auth-rules",
  "mpl-token-metadata",
  "reqwest",
@@ -5914,7 +5931,7 @@ dependencies = [
  "backtrace",
  "bytes",
  "libc",
- "mio",
+ "mio 1.0.2",
  "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",

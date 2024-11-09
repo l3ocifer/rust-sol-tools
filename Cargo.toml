@@ -8,9 +8,10 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # Core dependencies
-leptos = "0.6.15"
-leptos_meta = "0.6.15"
-leptos_router = "0.6.15"
+leptos = { version = "0.6.15", features = ["nightly"] }
+leptos_meta = { version = "0.6.15", features = ["nightly"] }
+leptos_router = { version = "0.6.15", features = ["nightly"] }
+leptos_actix = { version = "0.6.15", optional = true }
 console_error_panic_hook = "0.1"
 log = "0.4"
 
@@ -26,16 +27,16 @@ serde_json = "1.0"
 borsh = "0.10.3"
 getrandom = { version = "0.2", features = ["js"] }
 
-# Optional server-only dependencies
+# Server dependencies
 actix-web = { version = "4.4", default-features = false, features = ["rustls"], optional = true }
 actix-files = { version = "0.6.2", optional = true }
-leptos_actix = { version = "0.6.6", optional = true }
-tokio = { version = "1", features = ["full"], optional = true }
+tokio = { version = "1.36", features = ["full"], optional = true }
+mio = { version = "0.8", optional = true }
 http = { version = "0.2", optional = true }
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"], optional = true }
 dotenv = { version = "0.15", optional = true }
 
-# Solana and related dependencies (optional)
+# Solana dependencies
 solana-program = { version = "1.16.14", optional = true }
 solana-sdk = { version = "1.16.14", optional = true }
 solana-client = { version = "1.16.14", optional = true }
@@ -46,37 +47,29 @@ mpl-token-metadata = { version = "5.1.0", optional = true }
 mpl-token-auth-rules = { version = "1.5.1", optional = true }
 
 [features]
-default = ["ssr"]
+default = ["ssr", "hydrate"]
+hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
-    "actix-web",
-    "actix-files",
-    "leptos_actix",
-    "tokio",
-    "http",
-    "reqwest",
-    "dotenv",
-    "solana-program",
-    "solana-sdk",
-    "solana-client",
-    "spl-token",
-    "spl-associated-token-account",
-    "spl-token-2022",
-    "mpl-token-metadata",
-    "mpl-token-auth-rules",
+    "dep:actix-web",
+    "dep:actix-files",
+    "dep:leptos_actix",
+    "dep:tokio",
+    "dep:mio",
+    "dep:http",
+    "dep:reqwest",
+    "dep:dotenv",
+    "dep:solana-program",
+    "dep:solana-sdk",
+    "dep:solana-client",
+    "dep:spl-token",
+    "dep:spl-associated-token-account",
+    "dep:spl-token-2022",
+    "dep:mpl-token-metadata",
+    "dep:mpl-token-auth-rules",
+    "leptos/ssr",
+    "leptos_meta/ssr",
+    "leptos_router/ssr"
 ]
-
-[[bin]]
-name = "sol-tools"
-path = "src/main.rs"
-required-features = ["ssr"]
-
-[[bin]]
-name = "create_spl"
-path = "src/bin/create_spl.rs"
-required-features = ["ssr"]
-
-[workspace]
-members = ["."]
 
 [package.metadata.leptos]
 output-name = "sol-tools"
@@ -85,15 +78,17 @@ site-pkg-dir = "pkg"
 site-addr = "127.0.0.1:3000"
 reload-port = 3001
 env = "DEV"
-bin-target = "sol-tools"  # Specify the binary target for cargo-leptos
+bin-target = "sol-tools"
+style-file = "style/main.scss"
+assets-dir = "assets"
+site-root-relative = true
 
-# Additional features
-additional-features = ["ssr"]
+# Build configuration
+lib-profile-release = "wasm-release"
+lib-profile-dev = "dev"
+browserquery = "defaults"
+watch = true
+watch-additional-files = ["./src/**/*"]
 
-# Client build configurations
-client-features = ["ssr"]
-client-default-features = true
-
-# Server build configurations
-server-features = ["ssr"]
-server-default-features = true
+# Feature configuration
+features = ["ssr", "hydrate"]
