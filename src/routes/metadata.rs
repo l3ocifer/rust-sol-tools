@@ -1,7 +1,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 use actix_web::{post, web, HttpResponse};
 #[cfg(not(target_arch = "wasm32"))]
-use crate::utils::pinata::pinata_client::{upload_metadata_to_pinata};
+use crate::utils::pinata::pinata_client::upload_metadata_to_pinata;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[post("/upload-metadata")]

@@ -1,6 +1,7 @@
-use js_sys::JsValue;
-use leptos::SignalUpdate;
-use crate::wallet::{WalletContext, WalletType};
+use wasm_bindgen::JsCast;
+use wasm_bindgen::JsValue;
+use wasm_bindgen_futures::JsFuture;
+use crate::wallet::WalletContext;
 
 pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), String> {
     #[cfg(target_arch = "wasm32")]
@@ -28,7 +29,7 @@ pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), Strin
         let promise = connect_fn.call0(&solana)
             .map_err(|_| "Failed to call connect")?;
         
-        let result = js_sys::JsFuture::from(js_sys::Promise::from(promise))
+        let result = JsFuture::from(js_sys::Promise::from(promise))
             .await
             .map_err(|e| format!("Connection rejected: {:?}", e))?;
         
