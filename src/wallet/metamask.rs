@@ -1,7 +1,8 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::window;
-use js_sys::{Function, Promise, Object, Reflect};
+use js_sys::{Function, Promise, Object, Reflect, Array};
+use leptos::SignalUpdate;
 use super::WalletContext;
 
 pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
@@ -26,8 +27,8 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
         .dyn_into::<Function>()
         .map_err(|_| "Failed to cast request method")?;
 
-    let params = js_sys::Array::new();
-    let request_obj = js_sys::Object::new();
+    let params = Array::new();
+    let request_obj = Object::new();
     Reflect::set(&request_obj, &JsValue::from_str("method"), &JsValue::from_str("eth_requestAccounts"))
         .map_err(|_| "Failed to set request method")?;
     Reflect::set(&request_obj, &JsValue::from_str("params"), &params)
@@ -40,7 +41,7 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
         .await
         .map_err(|_| "User rejected connection")?;
 
-    let accounts_array = js_sys::Array::from(&accounts);
+    let accounts_array = Array::from(&accounts);
     if accounts_array.length() == 0 {
         return Err("No accounts found".to_string());
     }

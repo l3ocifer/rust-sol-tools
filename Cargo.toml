@@ -36,7 +36,8 @@ web-sys = { version = "0.3.66", features = [
     "RequestInit", "RequestMode", "Request",
     "Crypto", "SubtleCrypto", "CryptoKey",
     "DomStringMap", "Storage", "Performance",
-    "PerformanceTiming", "console"
+    "PerformanceTiming", "console", "Navigator",
+    "Permissions", "PermissionStatus"
 ]}
 serde-wasm-bindgen = "0.6"
 gloo = { version = "0.11", features = ["storage"] }
