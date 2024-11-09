@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 [[bin]]
 name = "sol-tools"
 path = "src/main.rs"
+required-features = ["ssr"]
 
 [[bin]]
 name = "create_spl"
