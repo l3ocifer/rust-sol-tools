@@ -21,7 +21,7 @@ use {
     mpl_token_metadata::{
         ID as TOKEN_METADATA_PROGRAM_ID,
         types::DataV2,
-        instructions::{CreateMetadataAccountV3Builder},
+        instructions::CreateMetadataAccountV3Builder,
     },
 };
 
@@ -104,10 +104,9 @@ pub async fn create_token(
         .mint(mint_account.pubkey())
         .mint_authority(payer.pubkey())
         .payer(payer.pubkey())
-        .update_authority(payer.pubkey())
+        .update_authority(payer.pubkey(), false)
         .data(metadata_data)
         .is_mutable(config.is_mutable)
-        .build(|instruction| instruction)
         .instruction();
 
     instructions.push(create_metadata_ix);
