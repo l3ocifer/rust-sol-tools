@@ -7,7 +7,7 @@ use {
         program_pack::Pack,
         pubkey::Pubkey,
         system_instruction,
-        system_program,
+        sysvar,
     },
     solana_sdk::{
         commitment_config::CommitmentConfig,
@@ -19,11 +19,10 @@ use {
         state::Mint,
     },
     mpl_token_metadata::{
-        id as TOKEN_METADATA_PROGRAM_ID,
-        instruction::create_metadata_accounts_v3,
+        ID as TOKEN_METADATA_PROGRAM_ID,
+        instructions as mpl_instructions,
+        types as mpl_types,
     },
-    mpl_token_metadata::instruction::CreateMetadataAccountsV3InstructionArgs,
-    mpl_token_metadata::state::DataV2,
 };
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
@@ -79,18 +78,17 @@ pub async fn create_token(
     ];
 
     // Find metadata account PDA
-    let metadata_seeds = &[
-        b"metadata",
-        TOKEN_METADATA_PROGRAM_ID().as_ref(),
-        mint_account.pubkey().as_ref(),
-    ];
     let (metadata_account, _) = Pubkey::find_program_address(
-        metadata_seeds,
-        &TOKEN_METADATA_PROGRAM_ID(),
+        &[
+            b"metadata",
+            TOKEN_METADATA_PROGRAM_ID.as_ref(),
+            mint_account.pubkey().as_ref(),
+        ],
+        &TOKEN_METADATA_PROGRAM_ID,
     );
 
-    // Create metadata instruction
-    let metadata_data = DataV2 {
+    // Prepare metadata data
+    let metadata_data = mpl_types::DataV2 {
         name: config.name.clone(),
         symbol: config.symbol.clone(),
         uri: config.uri.clone(),
@@ -100,20 +98,27 @@ pub async fn create_token(
         uses: None,
     };
 
-    let metadata_args = CreateMetadataAccountsV3InstructionArgs {
+    // Create metadata accounts arguments
+    let accounts = mpl_instructions::CreateMetadataAccountsV3 {
+        metadata: metadata_account,
+        mint: mint_account.pubkey(),
+        mint_authority: payer.pubkey(),
+        payer: payer.pubkey(),
+        update_authority: payer.pubkey(),
+        system_program: solana_program::system_program::ID,
+        rent: sysvar::rent::ID,
+    };
+
+    let args = mpl_instructions::CreateMetadataAccountsV3InstructionArgs {
         data: metadata_data,
         is_mutable: config.is_mutable,
         collection_details: None,
     };
 
-    let create_metadata_ix = create_metadata_accounts_v3(
-        TOKEN_METADATA_PROGRAM_ID(),
-        metadata_account,
-        mint_account.pubkey(),
-        payer.pubkey(),
-        payer.pubkey(),
-        payer.pubkey(),
-        metadata_args,
+    // Create instruction
+    let create_metadata_ix = mpl_instructions::create_metadata_accounts_v3(
+        accounts,
+        args,
     );
 
     instructions.push(create_metadata_ix);
