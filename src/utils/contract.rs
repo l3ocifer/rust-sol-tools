@@ -9,17 +9,18 @@ use {
         signature::{Keypair, Signer},
         transaction::Transaction,
         program_pack::Pack,
+        system_program, sysvar,
     },
     spl_token_2022::{
         state::Mint,
         instruction as token_instruction,
     },
     mpl_token_metadata::{
-        instructions::{
-            CreateMetadataAccountV3InstructionArgs,
+        instruction::{
             create_metadata_accounts_v3,
+            CreateMetadataAccountsV3InstructionArgs,
         },
-        types::DataV2,
+        state::DataV2,
         pda::find_metadata_account,
     },
 };
@@ -80,7 +81,7 @@ pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenC
     
     instructions.push(
         create_metadata_accounts_v3(
-            CreateMetadataAccountV3InstructionArgs {
+            CreateMetadataAccountsV3InstructionArgs {
                 data: DataV2 {
                     name: config.name,
                     symbol: config.symbol,
@@ -92,10 +93,13 @@ pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenC
                 },
                 is_mutable: config.is_mutable,
                 collection_details: None,
+                metadata_account,
                 mint: mint_account.pubkey(),
                 mint_authority: payer.pubkey(),
-                update_authority: payer.pubkey(),
                 payer: payer.pubkey(),
+                update_authority: payer.pubkey(),
+                system_program: system_program::id(),
+                rent: sysvar::rent::id(),
             },
         ),
     );
