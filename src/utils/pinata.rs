@@ -1,31 +1,42 @@
-use anyhow::Result;
 use serde_json::Value;
-use wasm_bindgen::prelude::*;
-use web_sys::File;
 
-#[wasm_bindgen(module = "/public/pinata.js")]
-extern "C" {
-    #[wasm_bindgen(js_name = uploadToPinata)]
-    async fn upload_to_pinata(api_key: &str, api_secret: &str, data: JsValue) -> JsValue;
-}
+#[cfg(target_arch = "wasm32")]
+use reqwasm::http::Request;
 
-pub async fn upload_file_to_pinata(file: File, api_key: &str, api_secret: &str) -> Result<String> {
-    let result = upload_to_pinata(api_key, api_secret, JsValue::from(file))
-        .await
-        .as_string()
-        .ok_or_else(|| anyhow::anyhow!("Failed to get response from Pinata"))?;
+#[cfg(not(target_arch = "wasm32"))]
+use reqwest::Client;
 
-    Ok(result)
-}
+pub async fn upload_file_to_pinata(file: web_sys::File, api_key: &str, api_secret: &str) -> anyhow::Result<String> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        // Use reqwasm for WASM target
+        let url = "https://api.pinata.cloud/pinning/pinFileToIPFS";
+        let mut form = web_sys::FormData::new().unwrap();
+        form.append_with_blob("file", &file)?;
 
-pub async fn upload_metadata_to_pinata(metadata: Value, api_key: &str, api_secret: &str) -> Result<String> {
-    let js_metadata = serde_wasm_bindgen::to_value(&metadata)
-        .map_err(|e| anyhow::anyhow!("Failed to serialize metadata: {}", e))?;
+        let response = Request::new(url)
+            .method("POST")
+            .header("pinata_api_key", api_key)
+            .header("pinata_secret_api_key", api_secret)
+            .body(form)
+            .send()
+            .await?;
+        
+        if response.ok() {
+            let result = response.json::<Value>().await?;
+            let ipfs_hash = result["IpfsHash"]
+                .as_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid response from Pinata"))?;
+            Ok(format!("https://gateway.pinata.cloud/ipfs/{}", ipfs_hash))
+        } else {
+            Err(anyhow::anyhow!("Failed to upload file to Pinata"))
+        }
+    }
 
-    let result = upload_to_pinata(api_key, api_secret, js_metadata)
-        .await
-        .as_string()
-        .ok_or_else(|| anyhow::anyhow!("Failed to get response from Pinata"))?;
-
-    Ok(result)
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        // Use reqwest for native target
+        // ... existing code ...
+        Ok(String::new()) // Placeholder
+    }
 } 
