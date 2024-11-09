@@ -1,13 +1,13 @@
-#[cfg(feature = "ssr")]
+#[cfg(not(target_arch = "wasm32"))]
 use actix_web::{post, web, HttpResponse, Responder};
 
-#[cfg(feature = "ssr")]
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(serde::Deserialize)]
 pub struct CreateTokenRequest {
     pub metadata_uri: String,
 }
 
-#[cfg(feature = "ssr")]
+#[cfg(not(target_arch = "wasm32"))]
 #[post("/create-token")]
 pub async fn create_token_route(req: web::Json<CreateTokenRequest>) -> impl Responder {
     use crate::token::create_token;

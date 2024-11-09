@@ -51,32 +51,4 @@ fn get_api_secret() -> Result<String> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub mod upload_server {
-    use anyhow::Result;
-    use serde_json::Value;
-    use reqwest::Client;
-
-    pub async fn upload_metadata_to_pinata(
-        api_key: &str,
-        api_secret: &str,
-        metadata: &Value,
-    ) -> Result<String> {
-        let client = Client::new();
-        let url = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
-
-        let res = client
-            .post(url)
-            .header("pinata_api_key", api_key)
-            .header("pinata_secret_api_key", api_secret)
-            .json(metadata)
-            .send()
-            .await?;
-
-        let json: Value = res.json().await?;
-        let ipfs_hash = json["IpfsHash"]
-            .as_str()
-            .ok_or_else(|| anyhow::anyhow!("Invalid response from Pinata"))?;
-
-        Ok(format!("https://gateway.pinata.cloud/ipfs/{}", ipfs_hash))
-    }
-} 
+compile_error!("This module is intended for wasm32 target only.");

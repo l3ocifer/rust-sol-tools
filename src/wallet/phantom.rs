@@ -74,3 +74,6 @@ async fn request_phantom_connection(solana: &JsValue) -> Result<String, JsValue>
 
     Ok(address)
 } 
+
+#[cfg(not(target_arch = "wasm32"))]
+compile_error!("This module is intended for wasm32 target only.");
