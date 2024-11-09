@@ -91,12 +91,9 @@ bin-target = "sol-tools"  # Specify the binary target for cargo-leptos
 additional-features = ["ssr"]
 
 # Client build configurations
-client-features = []
-client-default-features = false
+client-features = ["ssr"]
+client-default-features = true
 
 # Server build configurations
 server-features = ["ssr"]
 server-default-features = true
-
-[future-incompat-report]
-frequency = "always"
