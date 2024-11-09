@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "sol-tools"
+name = "sol-tools-bin"
 path = "src/main.rs"
 required-features = ["ssr"]
 
@@ -74,7 +74,7 @@ members = ["."]
 [[workspace.metadata.leptos]]
 name = "sol-tools"
 bin-package = "sol-tools"
-bin-target = "sol-tools"
+bin-target = "sol-tools-bin"
 lib-package = "sol-tools"
 output-name = "sol-tools"
 root = "."
