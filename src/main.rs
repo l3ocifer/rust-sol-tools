@@ -5,7 +5,7 @@ use sol_tools::app::App;
 use {
     actix_files::Files,
     actix_web::{App as ActixApp, HttpServer, middleware::Logger, web},
-    leptos_actix::{generate_route_list, LeptosRoutes, handle_server_fns},
+    leptos_actix::{generate_route_list, LeptosRoutes},
     sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
     env_logger::Env,
     leptos_config::get_configuration,
@@ -27,17 +27,16 @@ async fn main() -> std::io::Result<()> {
 
         ActixApp::new()
             .wrap(Logger::default())
-            .route("/api/{tail:.*}", web::post().to(handle_server_fns))
-            .service(Files::new("/pkg", format!("{}/pkg", site_root)))
-            .service(Files::new("/public", format!("{}/public", site_root)))
-            .service(Files::new("/assets", format!("{}/assets", site_root)))
-            .service(upload_metadata)
-            .service(create_token_route)
             .leptos_routes(
                 leptos_options.clone(),
                 routes.clone(),
                 || view! { <App/> }
             )
+            .service(Files::new("/pkg", format!("{}/pkg", site_root)))
+            .service(Files::new("/public", format!("{}/public", site_root)))
+            .service(Files::new("/assets", format!("{}/assets", site_root)))
+            .service(upload_metadata)
+            .service(create_token_route)
             .service(Files::new("/", site_root).index_file("index.html"))
     })
     .bind(&addr)?
