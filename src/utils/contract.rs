@@ -3,22 +3,22 @@ use borsh::{BorshSerialize, BorshDeserialize};
 #[cfg(not(target_arch = "wasm32"))]
 use {
     solana_client::rpc_client::RpcClient,
-    solana_program::system_instruction,
+    solana_program::{pubkey::Pubkey, system_instruction, system_program, sysvar},
     solana_sdk::{
         commitment_config::CommitmentConfig,
+        program_pack::Pack,
         signature::{Keypair, Signer},
         transaction::Transaction,
-        program_pack::Pack,
-        pubkey::Pubkey,
-        system_program, sysvar,
     },
     spl_token_2022::{
-        state::Mint,
         instruction as token_instruction,
+        state::Mint,
     },
-    mpl_token_metadata::instruction::create_metadata_accounts_v3,
-    mpl_token_metadata::state::DataV2,
-    mpl_token_metadata::ID as TOKEN_METADATA_PROGRAM_ID,
+    mpl_token_metadata::{
+        instruction::create_metadata_accounts_v3,
+        state::DataV2,
+        ID as TOKEN_METADATA_PROGRAM_ID,
+    },
 };
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
