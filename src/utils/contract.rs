@@ -9,18 +9,18 @@ use {
         signature::{Keypair, Signer},
         transaction::Transaction,
         program_pack::Pack,
+        pubkey::Pubkey,
         system_program, sysvar,
     },
     spl_token_2022::{
         state::Mint,
         instruction as token_instruction,
     },
-    mpl_token_metadata::instructions::{
-        CreateMetadataAccountV3,
-        CreateMetadataAccountV3InstructionArgs,
+    mpl_token_metadata::{
+        instruction::create_metadata_accounts_v3,
+        state::DataV2,
+        ID as TOKEN_METADATA_PROGRAM_ID,
     },
-    mpl_token_metadata::types::DataV2,
-    mpl_token_metadata::ID as TOKEN_METADATA_PROGRAM_ID,
 };
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
@@ -75,29 +75,38 @@ pub async fn create_token(payer: &Keypair, config: TokenConfig) -> Result<TokenC
         )?,
     );
 
-    let (metadata_account, _) = mpl_token_metadata::pda::find_metadata_account(&mint_account.pubkey());
+    let (metadata_account, _) = Pubkey::find_program_address(
+        &[
+            b"metadata",
+            TOKEN_METADATA_PROGRAM_ID.as_ref(),
+            mint_account.pubkey().as_ref(),
+        ],
+        &TOKEN_METADATA_PROGRAM_ID,
+    );
     
     instructions.push(
-        CreateMetadataAccountV3 {
-            metadata: metadata_account,
-            mint: mint_account.pubkey(),
-            mint_authority: payer.pubkey(),
-            payer: payer.pubkey(),
-            update_authority: payer.pubkey(),
-            system_program: system_program::id(),
-            rent: sysvar::rent::id(),
-            data: DataV2 {
-                name: config.name,
-                symbol: config.symbol,
-                uri: config.uri,
-                seller_fee_basis_points: 0,
-                creators: None,
-                collection: None,
-                uses: None,
+        create_metadata_accounts_v3(
+            CreateMetadataAccountsV3InstructionArgs {
+                data: DataV2 {
+                    name: config.name,
+                    symbol: config.symbol,
+                    uri: config.uri,
+                    seller_fee_basis_points: 0,
+                    creators: None,
+                    collection: None,
+                    uses: None,
+                },
+                is_mutable: config.is_mutable,
+                collection_details: None,
+                metadata_account,
+                mint: mint_account.pubkey(),
+                mint_authority: payer.pubkey(),
+                payer: payer.pubkey(),
+                update_authority: (payer.pubkey(), true),
+                system_program: system_program::id(),
+                rent: Some(sysvar::rent::id()),
             },
-            is_mutable: config.is_mutable,
-            collection_details: None,
-        }.instruction(),
+        ),
     );
 
     let recent_blockhash = rpc_client.get_latest_blockhash()?;
