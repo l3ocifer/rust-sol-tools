@@ -19,16 +19,10 @@ use {
         state::Mint,
     },
     mpl_token_metadata::{
-        instruction::create_metadata_accounts_v3,
-        state::DataV2,
         ID as TOKEN_METADATA_PROGRAM_ID,
+        types::DataV2,
+        instructions::{CreateMetadataAccountV3Builder},
     },
-};
-
-use mpl_token_metadata::generated::instructions::{
-    create_metadata_account_v3,
-    CreateMetadataAccountV3,
-    CreateMetadataAccountV3InstructionArgs,
 };
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
@@ -104,18 +98,17 @@ pub async fn create_token(
         &TOKEN_METADATA_PROGRAM_ID,
     );
 
-    // Create instruction
-    let create_metadata_ix = create_metadata_accounts_v3(
-        TOKEN_METADATA_PROGRAM_ID,
-        metadata_account,
-        mint_account.pubkey(),
-        payer.pubkey(),        // mint authority
-        payer.pubkey(),        // payer
-        payer.pubkey(),        // update authority
-        metadata_data,
-        config.is_mutable,
-        None,                  // collection_details
-    );
+    // Create the metadata account instruction using the builder
+    let create_metadata_ix = CreateMetadataAccountV3Builder::new()
+        .metadata(metadata_account)
+        .mint(mint_account.pubkey())
+        .mint_authority(payer.pubkey())
+        .payer(payer.pubkey())
+        .update_authority(payer.pubkey())
+        .data(metadata_data)
+        .is_mutable(config.is_mutable)
+        .build(|instruction| instruction)
+        .instruction();
 
     instructions.push(create_metadata_ix);
 
