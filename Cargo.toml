@@ -73,7 +73,6 @@ ssr = [
     "dep:actix-rt",
     "dep:tokio",
     "dep:futures",
-    "dep:reqwest",
     "dep:leptos_actix",
     "leptos/ssr",
     "leptos_meta/ssr",
