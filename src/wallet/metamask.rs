@@ -1,18 +1,17 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::window;
-use js_sys::{Function, Promise, Reflect};
+use wasm_bindgen::JsCast;
 use crate::wallet::{WalletContext, WalletType};
 use leptos::SignalUpdate;
 
 pub async fn connect_metamask(wallet_context: &WalletContext) -> Result<(), String> {
     #[cfg(target_arch = "wasm32")]
     {
-        let window = window().ok_or("No window object")?;
-        let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
+        let window = web_sys::window().ok_or("No window object")?;
+        let ethereum = js_sys::Reflect::get(&window, &JsValue::from_str("ethereum"))
             .map_err(|_| "No ethereum object in window")?;
         
-        let is_metamask = Reflect::get(&ethereum, &JsValue::from_str("isMetaMask"))
+        let is_metamask = js_sys::Reflect::get(&ethereum, &JsValue::from_str("isMetaMask"))
             .map_err(|_| "Failed to access isMetaMask property")?
             .as_bool()
             .unwrap_or(false);
@@ -23,7 +22,7 @@ pub async fn connect_metamask(wallet_context: &WalletContext) -> Result<(), Stri
         }
         
         // Request accounts
-        let request_fn = Reflect::get(&ethereum, &JsValue::from_str("request"))
+        let request_fn = js_sys::Reflect::get(&ethereum, &JsValue::from_str("request"))
             .map_err(|_| "Failed to get request function")?
             .dyn_into::<Function>()
             .map_err(|_| "Request is not a function")?;

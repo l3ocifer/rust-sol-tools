@@ -40,6 +40,7 @@ web-sys = { version = "0.3.66", features = [
 js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
 reqwest = { version = "0.11", features = ["multipart", "json"] }
+gethostname = "0.4.3"
 solana-program = "1.18"
 solana-sdk = "1.18"
 solana-client = "1.18"

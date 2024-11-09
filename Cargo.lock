@@ -1984,6 +1984,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gethostname"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0176e0459c2e4a1fe232f984bca6890e681076abb9934f6cea7c326f3fc47818"
+dependencies = [
+ "libc",
+ "windows-targets 0.48.5",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4935,6 +4945,7 @@ dependencies = [
  "console_log 1.0.0",
  "env_logger 0.11.5",
  "futures",
+ "gethostname 0.4.3",
  "getrandom 0.2.15",
  "gloo",
  "gloo-utils 0.2.0",
@@ -5142,7 +5153,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71e36052aff6be1536bdf6f737c6e69aca9dbb6a2f3f582e14ecb0ddc0cd66ce"
 dependencies = [
  "crossbeam-channel",
- "gethostname",
+ "gethostname 0.2.3",
  "lazy_static",
  "log",
  "reqwest",

@@ -1,8 +1,6 @@
-use web_sys::File;
-use serde_json::Value;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-use gloo_utils::format::JsValueSerdeExt;
+use web_sys::File;
 use anyhow::Result;
 
 #[cfg(target_arch = "wasm32")]
@@ -13,7 +11,7 @@ extern "C" {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn upload_file(file: File) -> Result<String, JsValue> {
+pub async fn upload_file(file: File) -> Result<String> {
     let api_key = get_api_key()?;
     let api_secret = get_api_secret()?;
     
@@ -26,13 +24,11 @@ pub async fn upload_file(file: File) -> Result<String, JsValue> {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn upload_metadata(metadata: Value) -> Result<String> {
+pub async fn upload_metadata(metadata: JsValue) -> Result<String> {
     let api_key = get_api_key()?;
     let api_secret = get_api_secret()?;
 
-    let metadata_js = JsValue::from_serde(&metadata)?;
-
-    let result_js = upload_to_pinata(&api_key, &api_secret, metadata_js).await;
+    let result_js = upload_to_pinata(&api_key, &api_secret, metadata).await;
     let result_str = result_js.as_string().ok_or_else(|| anyhow::anyhow!("Failed to get response from Pinata"))?;
 
     Ok(result_str)
