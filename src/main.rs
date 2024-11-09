@@ -27,7 +27,7 @@ async fn main() -> std::io::Result<()> {
 
         ActixApp::new()
             .wrap(Logger::default())
-            .service(Files::new("/", site_root.clone()))
+            .service(Files::new("/", site_root.clone()).index_file("index.html"))
             .service(upload_metadata)
             .service(create_token_route)
             .leptos_routes(

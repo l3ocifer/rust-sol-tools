@@ -90,6 +90,7 @@ lib-features = ["hydrate"]
 bin-default-features = false
 lib-default-features = false
 watch = true
+site-serve-dir = "target/site"
 
 [workspace]
 members = ["."]
