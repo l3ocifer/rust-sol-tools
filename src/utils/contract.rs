@@ -20,8 +20,12 @@ use {
     },
     mpl_token_metadata::{
         ID as TOKEN_METADATA_PROGRAM_ID,
-        instructions as mpl_instructions,
-        types as mpl_types,
+        instruction::{
+            create_create_metadata_account_v3_instruction,
+            CreateMetadataAccountV3InstructionArgs,
+        },
+        accounts::CreateMetadataAccountV3,
+        state::DataV2,
     },
 };
 
@@ -77,6 +81,17 @@ pub async fn create_token(
         )?,
     ];
 
+    // Prepare metadata data
+    let metadata_data = DataV2 {
+        name: config.name.clone(),
+        symbol: config.symbol.clone(),
+        uri: config.uri.clone(),
+        seller_fee_basis_points: 0,
+        creators: None,
+        collection: None,
+        uses: None,
+    };
+
     // Find metadata account PDA
     let (metadata_account, _) = Pubkey::find_program_address(
         &[
@@ -87,36 +102,25 @@ pub async fn create_token(
         &TOKEN_METADATA_PROGRAM_ID,
     );
 
-    // Prepare metadata data
-    let metadata_data = mpl_types::DataV2 {
-        name: config.name.clone(),
-        symbol: config.symbol.clone(),
-        uri: config.uri.clone(),
-        seller_fee_basis_points: 0,
-        creators: None,
-        collection: None,
-        uses: None,
-    };
-
     // Create metadata accounts arguments
-    let accounts = mpl_instructions::CreateMetadataAccountV3 {
+    let accounts = CreateMetadataAccountV3 {
         metadata: metadata_account,
         mint: mint_account.pubkey(),
-        mint_authority: payer.pubkey(),
+        mint_authority: (payer.pubkey(), false),
         payer: payer.pubkey(),
         update_authority: payer.pubkey(),
         system_program: solana_program::system_program::ID,
-        rent: sysvar::rent::ID,
+        rent: Some(sysvar::rent::ID),
     };
 
-    let args = mpl_instructions::CreateMetadataAccountV3InstructionArgs {
+    let args = CreateMetadataAccountV3InstructionArgs {
         data: metadata_data,
         is_mutable: config.is_mutable,
         collection_details: None,
     };
 
     // Create instruction
-    let create_metadata_ix = mpl_instructions::create_metadata_account_v3(
+    let create_metadata_ix = create_create_metadata_account_v3_instruction(
         accounts,
         args,
     );
