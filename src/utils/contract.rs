@@ -20,13 +20,14 @@ use {
     },
     mpl_token_metadata::{
         ID as TOKEN_METADATA_PROGRAM_ID,
-        instruction::{
-            create_metadata_accounts_v3,
-            CreateMetadataAccountsV3,
-            CreateMetadataAccountsV3InstructionArgs,
-        },
-        state::DataV2,
+        types::DataV2,
     },
+};
+
+use mpl_token_metadata::generated::instructions::{
+    create_metadata_account_v3,
+    CreateMetadataAccountV3,
+    CreateMetadataAccountV3InstructionArgs,
 };
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
@@ -103,7 +104,7 @@ pub async fn create_token(
     );
 
     // Create metadata accounts arguments
-    let accounts = CreateMetadataAccountsV3 {
+    let accounts = CreateMetadataAccountV3 {
         metadata: metadata_account,
         mint: mint_account.pubkey(),
         mint_authority: payer.pubkey(),
@@ -113,14 +114,14 @@ pub async fn create_token(
         rent: sysvar::rent::ID,
     };
 
-    let args = CreateMetadataAccountsV3InstructionArgs {
+    let args = CreateMetadataAccountV3InstructionArgs {
         data: metadata_data,
         is_mutable: config.is_mutable,
         collection_details: None,
     };
 
     // Create instruction
-    let create_metadata_ix = create_metadata_accounts_v3(
+    let create_metadata_ix = create_metadata_account_v3(
         TOKEN_METADATA_PROGRAM_ID,
         accounts,
         args,
