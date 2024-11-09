@@ -27,15 +27,18 @@ async fn main() -> std::io::Result<()> {
 
         ActixApp::new()
             .wrap(Logger::default())
-            .service(Files::new("/", site_root.clone()).index_file("index.html"))
+            .route("/", actix_web::web::get().to(leptos_actix::handle_server_fns_with_context))
+            .service(Files::new("/pkg", format!("{}/pkg", site_root)))
+            .service(Files::new("/public", format!("{}/public", site_root)))
+            .service(Files::new("/assets", format!("{}/assets", site_root)))
             .service(upload_metadata)
             .service(create_token_route)
             .leptos_routes(
                 leptos_options.clone(),
                 routes.clone(),
-                || view! { <App/> },
+                || view! { <App/> }
             )
-            .service(Files::new("/pkg", format!("{}/pkg", site_root)))
+            .service(actix_files::Files::new("/", site_root).index_file("index.html"))
     })
     .bind(&addr)?
     .run()

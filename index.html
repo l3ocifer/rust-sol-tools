@@ -1,13 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Tools</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
-    <link data-trunk rel="scss" href="style/main.scss"/>
-    <link data-trunk rel="copy-dir" href="assets"/>
-    <link data-trunk rel="icon" href="assets/favicon.ico"/>
+    <title>Solana Tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link data-trunk rel="css" href="/pkg/sol-tools.css">
+    <link data-trunk rel="copy-dir" href="public">
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@metaplex-foundation/mpl-token-metadata@latest/dist/index.global.js"></script>
+    <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.min.js"></script>
 </head>
-<body></body>
+<body>
+    <div id="main"></div>
+    <script type="module">
+        import init from '/pkg/sol-tools.js';
+        init('/pkg/sol-tools_bg.wasm');
+    </script>
+</body>
 </html> 
