@@ -4,8 +4,8 @@ use sol_tools::app::App;
 #[cfg(not(target_arch = "wasm32"))]
 use {
     actix_files::Files,
-    actix_web::{App as ActixApp, HttpServer, middleware::Logger},
-    leptos_actix::{generate_route_list, LeptosRoutes},
+    actix_web::{App as ActixApp, HttpServer, middleware::Logger, web},
+    leptos_actix::{generate_route_list, LeptosRoutes, handle_server_fns},
     sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
     env_logger::Env,
     leptos_config::get_configuration,
@@ -27,7 +27,7 @@ async fn main() -> std::io::Result<()> {
 
         ActixApp::new()
             .wrap(Logger::default())
-            .route("/api/*fn_name", leptos_actix::handle_server_fns)
+            .route("/api/{tail:.*}", web::post().to(handle_server_fns))
             .service(Files::new("/pkg", format!("{}/pkg", site_root)))
             .service(Files::new("/public", format!("{}/public", site_root)))
             .service(Files::new("/assets", format!("{}/assets", site_root)))
