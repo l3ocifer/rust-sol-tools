@@ -129,195 +129,196 @@ fn CreateTokenPage() -> impl IntoView {
 
     view! {
         <div class="container">
-            <h2>"Create New Token"</h2>
-            
-            <form class="token-form" on:submit=on_submit>
-                <div class="form-group">
-                    <label for="token_name">"Token Name"</label>
-                    <input
-                        type="text"
-                        id="token_name"
-                        required
-                        placeholder="Enter token name"
-                        on:input=move |ev| {
-                            set_token_name.set(event_target_value(&ev));
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="token_symbol">"Token Symbol"</label>
-                    <input
-                        type="text"
-                        id="token_symbol"
-                        required
-                        placeholder="Enter token symbol"
-                        on:input=move |ev| {
-                            set_token_symbol.set(event_target_value(&ev));
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="token_description">"Token Description"</label>
-                    <textarea
-                        id="token_description"
-                        required
-                        placeholder="Enter token description"
-                        on:input=move |ev| {
-                            set_token_description.set(event_target_value(&ev));
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="metadata_uri">"Metadata URI"</label>
-                    <input
-                        type="text"
-                        id="metadata_uri"
-                        placeholder="Enter metadata URI from Pinata or similar service"
-                        on:input=move |ev| {
-                            set_metadata_uri.set(event_target_value(&ev));
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="decimals">"Decimals (0-9)"</label>
-                    <input
-                        type="number"
-                        id="decimals"
-                        min="0"
-                        max="9"
-                        required
-                        value="9"
-                        on:input=move |ev| {
-                            if let Ok(value) = event_target_value(&ev).parse() {
-                                set_decimals.set(value);
-                            }
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="initial_supply">"Initial Supply"</label>
-                    <input
-                        type="number"
-                        id="initial_supply"
-                        min="0"
-                        required
-                        value="1000000000"
-                        on:input=move |ev| {
-                            if let Ok(value) = event_target_value(&ev).parse() {
-                                set_initial_supply.set(value);
-                            }
-                        }
-                    />
-                </div>
-
-                <div class="form-group checkbox-group">
-                    <label>
+            <h2 class="token-management">"Create Token"</h2>
+            <div class="token-forms">
+                <form class="token-form" on:submit=on_submit>
+                    <div class="form-group">
+                        <label for="token_name">"Token Name"</label>
                         <input
-                            type="checkbox"
-                            checked=true
-                            on:change=move |ev| {
-                                set_is_mutable.set(event_target_checked(&ev));
+                            type="text"
+                            id="token_name"
+                            required
+                            placeholder="Enter token name"
+                            on:input=move |ev| {
+                                set_token_name.set(event_target_value(&ev));
                             }
                         />
-                        "Token metadata is mutable"
-                    </label>
-                </div>
+                    </div>
 
-                <div class="form-group checkbox-group">
-                    <label>
+                    <div class="form-group">
+                        <label for="token_symbol">"Token Symbol"</label>
                         <input
-                            type="checkbox"
-                            checked=true
-                            on:change=move |ev| {
-                                set_freeze_authority.set(event_target_checked(&ev));
+                            type="text"
+                            id="token_symbol"
+                            required
+                            placeholder="Enter token symbol"
+                            on:input=move |ev| {
+                                set_token_symbol.set(event_target_value(&ev));
                             }
                         />
-                        "Enable freeze authority"
-                    </label>
-                </div>
+                    </div>
 
-                <div class="form-group">
-                    <label>"Smart Contract Settings"</label>
-                    
-                    <div class="form-row">
-                        <label for="rate_limit">"Rate Limit (tokens per day)"</label>
+                    <div class="form-group">
+                        <label for="token_description">"Token Description"</label>
+                        <textarea
+                            id="token_description"
+                            required
+                            placeholder="Enter token description"
+                            on:input=move |ev| {
+                                set_token_description.set(event_target_value(&ev));
+                            }
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="metadata_uri">"Metadata URI"</label>
+                        <input
+                            type="text"
+                            id="metadata_uri"
+                            placeholder="Enter metadata URI from Pinata or similar service"
+                            on:input=move |ev| {
+                                set_metadata_uri.set(event_target_value(&ev));
+                            }
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="decimals">"Decimals (0-9)"</label>
                         <input
                             type="number"
-                            id="rate_limit"
+                            id="decimals"
                             min="0"
-                            placeholder="Optional: Enter max tokens per day"
+                            max="9"
+                            required
+                            value="9"
                             on:input=move |ev| {
-                                let value = event_target_value(&ev).parse::<u64>().ok();
-                                set_rate_limit.set(value);
+                                if let Ok(value) = event_target_value(&ev).parse() {
+                                    set_decimals.set(value);
+                                }
                             }
                         />
                     </div>
 
-                    <div class="form-row">
-                        <label for="transfer_fee">"Transfer Fee (basis points)"</label>
+                    <div class="form-group">
+                        <label for="initial_supply">"Initial Supply"</label>
                         <input
                             type="number"
-                            id="transfer_fee"
+                            id="initial_supply"
                             min="0"
-                            max="10000"
-                            placeholder="Optional: Enter fee in basis points (0-10000)"
+                            required
+                            value="1000000000"
                             on:input=move |ev| {
-                                let value = event_target_value(&ev).parse::<u16>().ok();
-                                set_transfer_fee.set(value);
+                                if let Ok(value) = event_target_value(&ev).parse() {
+                                    set_initial_supply.set(value);
+                                }
                             }
                         />
                     </div>
 
-                    <div class="form-row">
-                        <label for="max_transfer">"Max Transfer Amount"</label>
-                        <input
-                            type="number"
-                            id="max_transfer"
-                            min="0"
-                            placeholder="Optional: Enter max tokens per transfer"
-                            on:input=move |ev| {
-                                let value = event_target_value(&ev).parse::<u64>().ok();
-                                set_max_transfer_amount.set(value);
-                            }
-                        />
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked=true
+                                on:change=move |ev| {
+                                    set_is_mutable.set(event_target_checked(&ev));
+                                }
+                            />
+                            "Token metadata is mutable"
+                        </label>
                     </div>
-                </div>
 
-                <div id="creation-status" class="status-message">
-                    {move || status.get()}
-                </div>
-
-                {move || error.get().map(|err| view! {
-                    <div class="error-message">
-                        {err}
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked=true
+                                on:change=move |ev| {
+                                    set_freeze_authority.set(event_target_checked(&ev));
+                                }
+                            />
+                            "Enable freeze authority"
+                        </label>
                     </div>
-                })}
 
-                {move || success.get().map(|msg| view! {
-                    <div class="success-message">
-                        {msg}
+                    <div class="form-group">
+                        <label>"Smart Contract Settings"</label>
+                        
+                        <div class="form-row">
+                            <label for="rate_limit">"Rate Limit (tokens per day)"</label>
+                            <input
+                                type="number"
+                                id="rate_limit"
+                                min="0"
+                                placeholder="Optional: Enter max tokens per day"
+                                on:input=move |ev| {
+                                    let value = event_target_value(&ev).parse::<u64>().ok();
+                                    set_rate_limit.set(value);
+                                }
+                            />
+                        </div>
+
+                        <div class="form-row">
+                            <label for="transfer_fee">"Transfer Fee (basis points)"</label>
+                            <input
+                                type="number"
+                                id="transfer_fee"
+                                min="0"
+                                max="10000"
+                                placeholder="Optional: Enter fee in basis points (0-10000)"
+                                on:input=move |ev| {
+                                    let value = event_target_value(&ev).parse::<u16>().ok();
+                                    set_transfer_fee.set(value);
+                                }
+                            />
+                        </div>
+
+                        <div class="form-row">
+                            <label for="max_transfer">"Max Transfer Amount"</label>
+                            <input
+                                type="number"
+                                id="max_transfer"
+                                min="0"
+                                placeholder="Optional: Enter max tokens per transfer"
+                                on:input=move |ev| {
+                                    let value = event_target_value(&ev).parse::<u64>().ok();
+                                    set_max_transfer_amount.set(value);
+                                }
+                            />
+                        </div>
                     </div>
-                })}
 
-                <button 
-                    type="submit" 
-                    class="button"
-                    disabled=move || loading.get()
-                >
-                    {move || if loading.get() {
-                        "Creating Token..."
-                    } else if wallet_ctx.state.get().connected {
-                        "Create Token"
-                    } else {
-                        "Connect Wallet First"
-                    }}
-                </button>
-            </form>
+                    <div id="creation-status" class="status-message">
+                        {move || status.get()}
+                    </div>
+
+                    {move || error.get().map(|err| view! {
+                        <div class="error-message">
+                            {err}
+                        </div>
+                    })}
+
+                    {move || success.get().map(|msg| view! {
+                        <div class="success-message">
+                            {msg}
+                        </div>
+                    })}
+
+                    <button 
+                        type="submit" 
+                        class="button"
+                        disabled=move || loading.get()
+                    >
+                        {move || if loading.get() {
+                            "Creating Token..."
+                        } else if wallet_ctx.state.get().connected {
+                            "Create Token"
+                        } else {
+                            "Connect Wallet First"
+                        }}
+                    </button>
+                </form>
+            </div>
         </div>
     }
 }
@@ -345,59 +346,60 @@ fn SendTokenPage() -> impl IntoView {
 
     view! {
         <div class="container">
-            <h2>"Send Tokens"</h2>
-            
-            <form class="token-form" on:submit=on_submit>
-                <div class="form-group">
-                    <label for="token_address">"Token Address"</label>
-                    <input
-                        type="text"
-                        id="token_address"
-                        required
-                        placeholder="Enter token address"
-                        on:input=move |ev| {
-                            set_token_address.set(event_target_value(&ev));
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="recipient_address">"Recipient Address"</label>
-                    <input
-                        type="text"
-                        id="recipient_address"
-                        required
-                        placeholder="Enter recipient address"
-                        on:input=move |ev| {
-                            set_recipient_address.set(event_target_value(&ev));
-                        }
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="amount">"Amount"</label>
-                    <input
-                        type="number"
-                        id="amount"
-                        min="1"
-                        required
-                        placeholder="Enter amount to send"
-                        on:input=move |ev| {
-                            if let Ok(value) = event_target_value(&ev).parse() {
-                                set_amount.set(value);
+            <h2 class="token-management">"Send Token"</h2>
+            <div class="token-forms">
+                <form class="token-form" on:submit=on_submit>
+                    <div class="form-group">
+                        <label for="token_address">"Token Address"</label>
+                        <input
+                            type="text"
+                            id="token_address"
+                            required
+                            placeholder="Enter token address"
+                            on:input=move |ev| {
+                                set_token_address.set(event_target_value(&ev));
                             }
-                        }
-                    />
-                </div>
+                        />
+                    </div>
 
-                <button type="submit" class="button">
-                    {move || if wallet_ctx.state.get().connected {
-                        "Send Tokens"
-                    } else {
-                        "Connect Wallet First"
-                    }}
-                </button>
-            </form>
+                    <div class="form-group">
+                        <label for="recipient_address">"Recipient Address"</label>
+                        <input
+                            type="text"
+                            id="recipient_address"
+                            required
+                            placeholder="Enter recipient address"
+                            on:input=move |ev| {
+                                set_recipient_address.set(event_target_value(&ev));
+                            }
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">"Amount"</label>
+                        <input
+                            type="number"
+                            id="amount"
+                            min="1"
+                            required
+                            placeholder="Enter amount to send"
+                            on:input=move |ev| {
+                                if let Ok(value) = event_target_value(&ev).parse() {
+                                    set_amount.set(value);
+                                }
+                            }
+                        />
+                    </div>
+
+                    <button type="submit" class="button">
+                        {move || if wallet_ctx.state.get().connected {
+                            "Send Tokens"
+                        } else {
+                            "Connect Wallet First"
+                        }}
+                    </button>
+                </form>
+            </div>
         </div>
     }
 }
