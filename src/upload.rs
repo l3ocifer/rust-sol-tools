@@ -13,7 +13,7 @@ extern "C" {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn upload_image(file: File) -> Result<String> {
+pub async fn upload_file(file: File) -> Result<String, JsValue> {
     let api_key = get_api_key()?;
     let api_secret = get_api_secret()?;
     
@@ -51,4 +51,7 @@ fn get_api_secret() -> Result<String> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-compile_error!("This module is intended for wasm32 target only.");
+pub fn upload_file() {
+    // This module is intended for wasm32 target only.
+    // No implementation needed for non-wasm targets.
+}

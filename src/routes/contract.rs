@@ -1,5 +1,9 @@
 #[cfg(not(target_arch = "wasm32"))]
 use actix_web::{post, web, HttpResponse, Responder};
+#[cfg(not(target_arch = "wasm32"))]
+use crate::utils::pinata::pinata_client::upload_metadata_to_pinata;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::utils::load_env_keypair;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(serde::Deserialize)]
@@ -12,7 +16,7 @@ pub struct CreateTokenRequest {
 pub async fn create_token_route(req: web::Json<CreateTokenRequest>) -> impl Responder {
     use crate::token::create_token;
 
-    let payer = match crate::utils::load_keypair() {
+    let payer = match crate::utils::load_env_keypair("SOLANA_KEYPAIR_PATH") {
         Ok(keypair) => Some(keypair),
         Err(e) => {
             eprintln!("Error loading keypair: {}", e);

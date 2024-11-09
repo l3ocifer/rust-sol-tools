@@ -24,26 +24,28 @@ pub async fn connect_metamask(wallet_context: &WalletContext) -> Result<(), Stri
         }
 
         // Request accounts
-        let request_method = JsValue::from_str("eth_requestAccounts");
+        let request_fn = Reflect::get(&ethereum, &JsValue::from_str("request"))
+            .map_err(|_| "Failed to get request function")?
+            .dyn_into::<Function>()
+            .map_err(|_| "Request is not a function")?;
+
         let params = js_sys::Array::new();
+        let method = JsValue::from_str("eth_requestAccounts");
 
         let request_params = js_sys::Object::new();
-        Reflect::set(&request_params, &JsValue::from_str("method"), &request_method)
+        Reflect::set(&request_params, &JsValue::from_str("method"), &method)
             .map_err(|_| "Failed to set method")?;
         Reflect::set(&request_params, &JsValue::from_str("params"), &params)
             .map_err(|_| "Failed to set params")?;
 
-        let request_fn = Reflect::get(&ethereum, &JsValue::from_str("request"))?
-            .dyn_into::<Function>()
-            .map_err(|_| "Request is not a function")?;
-
         let promise = request_fn.call1(&ethereum, &request_params)
             .map_err(|_| "Failed to call request")?;
-        let accounts = JsFuture::from(promise.dyn_into::<Promise>().unwrap())
-            .await
-            .map_err(|_| "Connection rejected")?;
 
-        let accounts_array = js_sys::Array::from(&accounts);
+        let accounts_js = JsFuture::from(Promise::from(promise))
+            .await
+            .map_err(|e| format!("Connection rejected: {:?}", e))?;
+
+        let accounts_array = js_sys::Array::from(&accounts_js);
         if accounts_array.length() > 0 {
             let address = accounts_array.get(0).as_string()
                 .ok_or("Invalid address format")?;

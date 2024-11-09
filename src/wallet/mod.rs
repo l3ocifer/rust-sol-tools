@@ -3,7 +3,6 @@ mod metamask;
 
 use leptos::*;
 use serde::{Deserialize, Serialize};
-use web_sys::console;
 
 pub use phantom::connect_phantom;
 pub use metamask::connect_metamask;
@@ -43,6 +42,7 @@ impl WalletContext {
             state.address = None;
             state.wallet_type = None;
             state.error = None;
+            state.connecting = false;
         });
     }
 
