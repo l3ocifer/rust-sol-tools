@@ -18,9 +18,6 @@ use {
 #[cfg(feature = "ssr")]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use leptos_config::get_configuration;
-    use env_logger::Env;
-
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     let conf = get_configuration(None).await.unwrap();
