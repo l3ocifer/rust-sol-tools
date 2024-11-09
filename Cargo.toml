@@ -45,7 +45,8 @@ http = { version = "1.0.0", optional = true }
 reqwest = { version = "0.11", default-features = false, features = ["json", "native-tls-vendored"], optional = true }
 
 [features]
-default = ["ssr"]
+# Removed default features to prevent 'ssr' from being enabled by default
+# default = ["ssr"]
 
 ssr = [
     "leptos_actix",
@@ -77,5 +78,7 @@ bin-target = "sol-tools"
 lib-package = "sol-tools"
 output-name = "sol-tools"
 root = "."
-features = ["ssr"]
-end-args = ["--features", "ssr"]
+
+# Ensure 'ssr' feature is only enabled during server build
+client-features = []        # No features for client build
+server-features = ["ssr"]   # Enable 'ssr' feature for server build

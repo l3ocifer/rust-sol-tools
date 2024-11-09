@@ -12,6 +12,14 @@ pub struct CreateTokenRequest {
 pub async fn create_token_route(req: web::Json<CreateTokenRequest>) -> impl Responder {
     use crate::token::create_token;
 
+    let payer = match crate::utils::load_keypair() {
+        Ok(keypair) => Some(keypair),
+        Err(e) => {
+            eprintln!("Error loading keypair: {}", e);
+            return HttpResponse::InternalServerError().body("Failed to load keypair");
+        }
+    };
+
     let params = crate::token::CreateTokenParams {
         name: "TokenName".to_string(),
         symbol: "SYMBOL".to_string(),
@@ -24,8 +32,7 @@ pub async fn create_token_route(req: web::Json<CreateTokenRequest>) -> impl Resp
         rate_limit: None,
         transfer_fee: None,
         max_transfer_amount: None,
-        #[cfg(not(target_arch = "wasm32"))]
-        payer: Some(crate::utils::load_keypair()?),
+        payer,
     };
 
     match create_token(params).await {

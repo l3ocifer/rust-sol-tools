@@ -2,6 +2,9 @@
 use actix_web::{get, web, HttpResponse, Responder};
 
 #[cfg(feature = "ssr")]
+use crate::utils::pinata::{upload_metadata_to_pinata, Metadata};
+
+#[cfg(feature = "ssr")]
 #[get("/upload-metadata")]
 pub async fn upload_metadata(metadata: web::Json<Metadata>) -> impl Responder {
     match upload_metadata_to_pinata(&metadata).await {
