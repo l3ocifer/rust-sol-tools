@@ -8,9 +8,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # Core dependencies
-leptos = { version = "0.6.5", features = ["nightly"] }
-leptos_meta = { version = "0.6.5", features = ["nightly"] }
-leptos_router = { version = "0.6.5", features = ["nightly"] }
+leptos = "0.6.15"
+leptos_meta = "0.6.15"
+leptos_router = "0.6.15"
 console_error_panic_hook = "0.1"
 log = "0.4"
 
@@ -23,17 +23,17 @@ js-sys = "0.3"
 # Shared dependencies
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-dotenv = { version = "0.15", optional = true }
 borsh = "0.10.3"
 getrandom = { version = "0.2", features = ["js"] }
 
 # Optional server-only dependencies
 actix-web = { version = "4", default-features = false, features = ["rustls"], optional = true }
 actix-files = { version = "0.6", optional = true }
-leptos_actix = { version = "0.6.5", optional = true }
+leptos_actix = { version = "0.6.6", optional = true }
 tokio = { version = "1", features = ["full"], optional = true }
-http = { version = "1.0.0", optional = true }
-reqwest = { version = "0.11", default-features = false, features = ["json", "native-tls-vendored"], optional = true }
+http = { version = "0.2", optional = true }
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"], optional = true }
+dotenv = { version = "0.15", optional = true }
 
 # Solana and related dependencies (optional)
 solana-program = { version = "1.16.14", optional = true }
@@ -65,32 +65,25 @@ ssr = [
     "mpl-token-auth-rules",
 ]
 
-[[bin]]
-name = "sol-tools-bin"
-path = "src/main.rs"
-required-features = ["ssr"]
-
-[[bin]]
-name = "create_spl"
-path = "src/bin/create_spl.rs"
-required-features = ["ssr"]
-
 [workspace]
 members = ["."]
-default-members = ["sol-tools"]
 
-[[workspace.metadata.leptos]]
-name = "sol-tools"
-bin-package = "sol-tools"
-bin-target = "sol-tools-bin"
-lib-package = "sol-tools"
+[package.metadata.leptos]
 output-name = "sol-tools"
-root = "."
+site-root = "target/site"
+site-pkg-dir = "pkg"
+site-addr = "127.0.0.1:3000"
+reload-port = "3001"
+env = "DEV"
+
+# Specify the server binary and features
+server-path = "src/main.rs"
+additional-features = ["ssr"]
 
 # Client build configurations
 client-features = []
-client-default-features = false  # Disable default features for client build
+client-default-features = false
 
 # Server build configurations
 server-features = ["ssr"]
-server-default-features = false  # Disable default features for server build
+server-default-features = false
