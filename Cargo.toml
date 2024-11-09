@@ -72,15 +72,14 @@ members = ["."]
 
 [[workspace.metadata.leptos]]
 name = "sol-tools"
-bin-package = "sol-tools"
-bin-target = "sol-tools"
 lib-package = "sol-tools"
 output-name = "sol-tools"
 root = "."
 
-# Ensure 'ssr' feature is only enabled during server build
-client-features = []        # No features for client build
+# Client build configurations
+client-features = []
 client-default-features = false  # Disable default features for client build
 
-server-features = ["ssr"]   # Enable 'ssr' feature for server build
-server-default-features = true   # Enable default features for server build
+# Server build configurations
+server-features = ["ssr"]
+server-default-features = true
