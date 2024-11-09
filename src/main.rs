@@ -36,16 +36,3 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen::prelude::wasm_bindgen(start)]
-pub fn main() {
-    use app::*;
-    use leptos::*;
-
-    _ = console_error_panic_hook::set_once();
-
-    leptos::mount_to_body(|| {
-        view! { <App/> }
-    });
-}
