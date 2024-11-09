@@ -428,9 +428,8 @@ fn WalletConnect() -> impl IntoView {
         }
     });
 
-    let wallet_ctx_phantom = wallet_ctx.clone();
     let connect_phantom = create_action(move |_: &()| {
-        let ctx = wallet_ctx_phantom.clone();
+        let ctx = wallet_ctx.get_value();
         async move {
             if let Err(e) = ctx.connect(WalletType::Phantom).await {
                 ctx.set_error(&e);
@@ -438,9 +437,8 @@ fn WalletConnect() -> impl IntoView {
         }
     });
     
-    let wallet_ctx_metamask = wallet_ctx.clone();
     let connect_metamask = create_action(move |_: &()| {
-        let ctx = wallet_ctx_metamask.clone();
+        let ctx = wallet_ctx.get_value();
         async move {
             if let Err(e) = ctx.connect(WalletType::MetaMask).await {
                 ctx.set_error(&e);
@@ -448,9 +446,8 @@ fn WalletConnect() -> impl IntoView {
         }
     });
     
-    let wallet_ctx_disconnect = wallet_ctx.clone();
     let disconnect = create_action(move |_: &()| {
-        let ctx = wallet_ctx_disconnect.clone();
+        let ctx = wallet_ctx.get_value();
         async move {
             ctx.disconnect();
         }

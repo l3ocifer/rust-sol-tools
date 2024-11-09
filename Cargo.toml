@@ -25,6 +25,14 @@ borsh = "0.10.3"
 thiserror = "1.0"
 bs58 = "0.5"
 env_logger = "0.11"
+solana-sdk = "1.18"
+solana-client = "1.18"
+spl-token = "4.0"
+spl-associated-token-account = "2.0"
+spl-token-2022 = "0.9"
+mpl-token-metadata = "4.0"
+mpl-token-auth-rules = "1.4"
+zstd = "0.11"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "0.2.89", features = ["serde"] }
@@ -46,6 +54,9 @@ reqwasm = "0.5.0"
 getrandom = { version = "0.2", features = ["js"] }
 leptos = { version = "0.6.5", features = ["csr", "hydrate", "nightly"] }
 reqwest = { version = "0.11", features = ["json"] }
+solana-sdk = { version = "1.18", features = ["wasm"] }
+solana-client = { version = "1.18", features = ["wasm"] }
+spl-token = { version = "4.0", features = ["wasm"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 leptos = { version = "0.6.5", features = ["ssr", "nightly"] }

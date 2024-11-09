@@ -45,6 +45,43 @@ impl WalletContext {
         }
     }
 
+    pub fn set_error(&self, error: &str) {
+        self.state.update(|state| {
+            state.error = Some(error.to_string());
+        });
+    }
+
+    pub fn disconnect(&self) {
+        self.state.update(|state| {
+            state.connected = false;
+            state.address = None;
+            state.wallet_type = None;
+            state.error = None;
+            state.connecting = false;
+        });
+    }
+
+    pub async fn connect(&self, wallet_type: WalletType) -> Result<(), String> {
+        self.state.update(|state| {
+            state.connecting = true;
+            state.error = None;
+        });
+
+        let result = match wallet_type {
+            WalletType::Phantom => connect_phantom(self).await,
+            WalletType::MetaMask => connect_metamask(self).await,
+        };
+
+        if let Err(e) = &result {
+            self.state.update(|state| {
+                state.error = Some(e.clone());
+                state.connecting = false;
+            });
+        }
+
+        result
+    }
+
     pub async fn get_sol_balance(&self) -> Result<f64, String> {
         if let Some(address) = &self.state.get().address {
             let pubkey = Pubkey::from_str(address)
