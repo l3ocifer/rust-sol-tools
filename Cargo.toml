@@ -47,15 +47,22 @@ hydrate = [
     "leptos_router/hydrate"
 ]
 ssr = [
-    "dep:actix-web",
-    "dep:actix-files",
-    "dep:actix-rt",
-    "dep:tokio",
-    "dep:futures",
-    "dep:leptos_actix",
-    "leptos/ssr",
-    "leptos_meta/ssr",
-    "leptos_router/ssr"
+    "actix-web",
+    "actix-files",
+    "actix-rt",
+    "tokio",
+    "futures",
+    "reqwest",
+    "solana-program",
+    "solana-sdk",
+    "solana-client",
+    "spl-token",
+    "spl-associated-token-account",
+    "spl-token-2022",
+    "mpl-token-metadata",
+    "mpl-token-auth-rules",
+    "bs58",
+    "zstd",
 ]
 
 [package.metadata.leptos]
@@ -78,11 +85,11 @@ features = ["ssr", "hydrate"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # Server-only dependencies
-actix-web = { version = "4.4", features = ["macros"] }
-actix-files = "0.6.2"
-actix-rt = "2.9"
-tokio = { version = "1.28", features = ["rt-multi-thread", "macros", "fs", "io-util", "net"] }
-futures = "0.3"
+actix-web = { version = "4.4", features = ["macros"], optional = true }
+actix-files = { version = "0.6.2", optional = true }
+actix-rt = { version = "2.9", optional = true }
+tokio = { version = "1.28", features = ["rt-multi-thread", "macros", "fs", "io-util", "net"], optional = true }
+futures = { version = "0.3", optional = true }
 reqwest = { version = "0.11.27", features = ["json", "rustls-tls"] }
 solana-program = "1.18"
 solana-sdk = "1.18"

@@ -51,7 +51,7 @@ pub async fn upload_file_to_pinata(file: web_sys::File, api_key: &str, api_secre
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "ssr")]
 pub mod pinata_client {
     use anyhow::Result;
     use reqwest::Client;

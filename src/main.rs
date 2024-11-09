@@ -47,7 +47,7 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(not(feature = "ssr"))]
 #[wasm_bindgen::prelude::wasm_bindgen(start)]
 pub fn main() {
     use app::*;
