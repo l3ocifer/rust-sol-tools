@@ -5,7 +5,7 @@ use sol_tools::app::App;
 use {
     actix_files::Files,
     actix_web::{App as ActixApp, HttpServer, middleware::Logger},
-    leptos_actix::{generate_route_list, LeptosRoutes},
+    leptos_actix::{generate_route_list, LeptosRoutes, handle_server_fns},
     sol_tools::routes::{metadata::upload_metadata, contract::create_token_route},
     env_logger::Env,
     leptos_config::get_configuration,
@@ -27,7 +27,7 @@ async fn main() -> std::io::Result<()> {
 
         ActixApp::new()
             .wrap(Logger::default())
-            .route("/", actix_web::web::get().to(leptos_actix::handle_server_fns_with_context))
+            .service(handle_server_fns())
             .service(Files::new("/pkg", format!("{}/pkg", site_root)))
             .service(Files::new("/public", format!("{}/public", site_root)))
             .service(Files::new("/assets", format!("{}/assets", site_root)))
@@ -38,7 +38,7 @@ async fn main() -> std::io::Result<()> {
                 routes.clone(),
                 || view! { <App/> }
             )
-            .service(actix_files::Files::new("/", site_root).index_file("index.html"))
+            .service(Files::new("/", site_root).index_file("index.html"))
     })
     .bind(&addr)?
     .run()
