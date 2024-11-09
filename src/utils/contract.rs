@@ -99,7 +99,7 @@ pub async fn create_token(
     };
 
     // Create metadata accounts arguments
-    let accounts = mpl_instructions::CreateMetadataAccountsV3 {
+    let accounts = mpl_instructions::CreateMetadataAccountV3 {
         metadata: metadata_account,
         mint: mint_account.pubkey(),
         mint_authority: payer.pubkey(),
@@ -109,14 +109,14 @@ pub async fn create_token(
         rent: sysvar::rent::ID,
     };
 
-    let args = mpl_instructions::CreateMetadataAccountsV3InstructionArgs {
+    let args = mpl_instructions::CreateMetadataAccountV3InstructionArgs {
         data: metadata_data,
         is_mutable: config.is_mutable,
         collection_details: None,
     };
 
     // Create instruction
-    let create_metadata_ix = mpl_instructions::create_metadata_accounts_v3(
+    let create_metadata_ix = mpl_instructions::create_metadata_account_v3(
         accounts,
         args,
     );
