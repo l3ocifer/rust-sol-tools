@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Core dependencies
-leptos = { version = "0.6.5", features = ["csr", "nightly"] }
+leptos = { version = "0.6.5", features = ["nightly"] }
 leptos_meta = { version = "0.6.5", features = ["nightly"] }
 leptos_router = { version = "0.6.5", features = ["nightly"] }
 console_error_panic_hook = "0.1"
@@ -40,6 +40,9 @@ web-sys = { version = "0.3.66", features = [
 ]}
 js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+leptos = { version = "0.6.5", features = ["csr", "hydrate", "nightly"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 leptos = { version = "0.6.5", features = ["ssr", "nightly"] }
@@ -74,8 +77,8 @@ site-addr = "127.0.0.1:3000"
 reload-port = 3001
 env = "DEV"
 bin-target = "sol-tools-server"
-bin-features = []
-lib-features = ["csr"]
+bin-features = ["ssr"]
+lib-features = ["csr", "hydrate"]
 bin-default-features = false
 lib-default-features = false
 watch = true
