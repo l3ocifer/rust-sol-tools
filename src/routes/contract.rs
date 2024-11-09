@@ -1,9 +1,5 @@
 #[cfg(not(target_arch = "wasm32"))]
 use actix_web::{post, web, HttpResponse, Responder};
-#[cfg(not(target_arch = "wasm32"))]
-use crate::utils::pinata::pinata_client::upload_metadata_to_pinata;
-#[cfg(not(target_arch = "wasm32"))]
-use crate::utils::load_env_keypair;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(serde::Deserialize)]

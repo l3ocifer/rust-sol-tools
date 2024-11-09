@@ -11,7 +11,6 @@ use std::io::Read;
 #[cfg(not(target_arch = "wasm32"))]
 use solana_sdk::{
     signature::{read_keypair_file, Keypair},
-    signer::Signer,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use anyhow::{Result, anyhow};

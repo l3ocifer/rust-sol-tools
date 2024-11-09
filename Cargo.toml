@@ -11,7 +11,6 @@ name = "sol-tools-server"
 path = "src/main.rs"
 
 [dependencies]
-# Core dependencies
 leptos = { version = "0.6.5", features = ["nightly"] }
 leptos_meta = { version = "0.6.5", features = ["nightly"] }
 leptos_router = { version = "0.6.5", features = ["nightly"] }
@@ -41,12 +40,6 @@ web-sys = { version = "0.3.66", features = [
 js-sys = "0.3.66"
 getrandom = { version = "0.2", features = ["js"] }
 
-[features]
-default = []
-hydrate = ["leptos/hydrate"]
-csr = ["leptos/csr"]
-ssr = ["leptos/ssr"]
-
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 leptos = { version = "0.6.5", features = ["csr", "hydrate", "nightly"] }
 
@@ -70,6 +63,12 @@ mpl-token-auth-rules = "1.4"
 bs58 = "0.5"
 zstd = "0.11"
 env_logger = "0.11"
+
+[features]
+default = ["ssr"]
+hydrate = ["leptos/hydrate"]
+csr = ["leptos/csr"]
+ssr = ["leptos/ssr"]
 
 [package.metadata.leptos]
 output-name = "sol-tools"
