@@ -410,17 +410,15 @@ fn WalletConnect() -> impl IntoView {
     let (_balance_error, _set_balance_error) = create_signal(None::<String>);
     
     create_effect(move |_| {
-        if wallet_ctx.get().state.get().connected {
+        if wallet_ctx.state.get().connected {
             spawn_local(async move {
-                let ctx = wallet_ctx.get();
-                if let Ok(balance) = ctx.get_balance().await {
-                    // Handle SOL balance update
-                    ctx.state.update(|state| {
+                if let Ok(balance) = wallet_ctx.get_balance().await {
+                    wallet_ctx.state.update(|state| {
                         state.sol_balance = balance;
                     });
                 }
-                if let Ok(balances) = ctx.get_token_balances().await {
-                    ctx.state.update(|state| {
+                if let Ok(balances) = wallet_ctx.get_token_balances().await {
+                    wallet_ctx.state.update(|state| {
                         state.token_balances = balances;
                     });
                 }
@@ -429,9 +427,8 @@ fn WalletConnect() -> impl IntoView {
     });
 
     let connect_phantom = create_action(move |_: &()| {
-        let ctx = wallet_ctx.get();
         async move {
-            let _ = ctx.connect(WalletType::Phantom).await;
+            let _ = wallet_ctx.connect(WalletType::Phantom).await;
         }
     });
 

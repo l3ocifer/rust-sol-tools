@@ -8,7 +8,7 @@ use super::{WalletContext, WalletType, TokenBalance, JsValueWrapper};
 pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     let window = window().ok_or("No window object found")?;
     let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
-        .map_err(|e| JsValueWrapper::from(e).into())?;
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
 
     if ethereum.is_undefined() {
         return Err("MetaMask not installed".to_string());
@@ -20,25 +20,25 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     });
 
     let ethereum_obj = ethereum.dyn_into::<Object>()
-        .map_err(|e| JsValueWrapper::from(e).into())?;
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
 
     let request_method = Reflect::get(&ethereum_obj, &JsValue::from_str("request"))
-        .map_err(|e| JsValueWrapper::from(e).into())?
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?
         .dyn_into::<Function>()
-        .map_err(|e| JsValueWrapper::from(e).into())?;
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
 
     let params = Array::new();
     let request = Object::new();
     Reflect::set(&request, &JsValue::from_str("method"), &JsValue::from_str("eth_requestAccounts"))
-        .map_err(|e| JsValueWrapper::from(e).into())?;
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
     Reflect::set(&request, &JsValue::from_str("params"), &params)
-        .map_err(|e| JsValueWrapper::from(e).into())?;
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
 
     let promise = request_method.call1(&ethereum_obj, &request)
-        .map_err(|e| JsValueWrapper::from(e).into())?;
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
     let accounts = JsFuture::from(Promise::from(promise))
         .await
-        .map_err(|e| JsValueWrapper::from(e).into())?;
+        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
 
     let accounts_array = Array::from(&accounts);
     if accounts_array.length() == 0 {
