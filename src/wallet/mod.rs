@@ -5,15 +5,13 @@ mod metamask;
 
 use leptos::*;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::JsFuture;
-use js_sys::{Array, Object, Promise, Reflect, Function};
-use web_sys::window;
 
 #[cfg(target_arch = "wasm32")]
-use self::{
-    phantom::connect_phantom,
-    metamask::connect_metamask,
+use {
+    wasm_bindgen::prelude::*,
+    wasm_bindgen_futures::JsFuture,
+    js_sys::{Array, Object, Promise, Reflect, Function},
+    web_sys::window,
 };
 
 #[derive(Clone)]
@@ -73,6 +71,7 @@ impl WalletContext {
         });
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub async fn get_balance(&self) -> Result<f64, String> {
         if let Some(address) = self.state.get().address {
             match self.state.get().wallet_type {
@@ -139,6 +138,12 @@ impl WalletContext {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn get_balance(&self) -> Result<f64, String> {
+        Err("Wallet operations not supported in server environment".to_string())
+    }
+
+    #[cfg(target_arch = "wasm32")]
     pub async fn get_token_balances(&self) -> Result<Vec<TokenBalance>, String> {
         if let Some(address) = self.state.get().address {
             match self.state.get().wallet_type {
@@ -211,6 +216,11 @@ impl WalletContext {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn get_token_balances(&self) -> Result<Vec<TokenBalance>, String> {
+        Err("Wallet operations not supported in server environment".to_string())
+    }
+
     pub fn disconnect(&self) {
         self.state.update(|state| {
             state.connected = false;
@@ -223,11 +233,17 @@ impl WalletContext {
         });
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub async fn connect(&self, wallet_type: WalletType) -> Result<(), String> {
         match wallet_type {
             WalletType::Phantom => connect_phantom(self).await,
             WalletType::MetaMask => connect_metamask(self).await,
         }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn connect(&self, _wallet_type: WalletType) -> Result<(), String> {
+        Err("Wallet operations not supported in server environment".to_string())
     }
 }
 
