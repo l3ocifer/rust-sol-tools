@@ -154,54 +154,51 @@ impl WalletContext {
 
     #[cfg(target_arch = "wasm32")]
     pub async fn get_token_balances(&self) -> Result<Vec<TokenBalance>, String> {
-        if let Some(address) = self.state.get().address {
+        if self.state.get().connected {
             match self.state.get().wallet_type {
                 Some(WalletType::Phantom) => {
-                    let window = web_sys::window().ok_or("No window object")?;
-                    let solana = js_sys::Reflect::get(&window, &JsValue::from_str("solana"))
-                        .map_err(|_| "No solana object")?;
-                    
-                    let connection = js_sys::Reflect::get(&solana, &JsValue::from_str("connection"))
-                        .map_err(|_| "No connection object")?;
-                    
-                    let get_token_accounts = js_sys::Reflect::get(&connection, &JsValue::from_str("getTokenAccountsByOwner"))
-                        .map_err(|_| "No getTokenAccountsByOwner method")?
-                        .dyn_into::<js_sys::Function>()
-                        .map_err(|_| "getTokenAccountsByOwner is not a function")?;
-                    
-                    let public_key = js_sys::Reflect::get(&solana, &JsValue::from_str("publicKey"))
-                        .map_err(|_| "No publicKey")?;
-                    
-                    let filter_obj = Object::new();
-                    Reflect::set(&filter_obj, &JsValue::from_str("programId"), &JsValue::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"))?;
-                    
-                    let promise = get_token_accounts.call2(&connection, &public_key, &filter_obj)
-                        .map_err(|_| "Failed to call getTokenAccountsByOwner")?;
-                    
-                    let accounts = JsFuture::from(Promise::from(promise))
+                    let window = window().ok_or("No window object found")?;
+                    let solana = Reflect::get(&window, &JsValue::from_str("solana"))
+                        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
+
+                    let get_token_accounts = Reflect::get(&solana, &JsValue::from_str("getTokenAccounts"))
+                        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
+
+                    let promise = Reflect::apply(
+                        &get_token_accounts.dyn_into::<Function>().map_err(|e| String::from(JsValueWrapper::from(e)))?,
+                        &solana,
+                        &Array::new(),
+                    ).map_err(|e| String::from(JsValueWrapper::from(e)))?;
+
+                    let result = JsFuture::from(Promise::from(promise))
                         .await
-                        .map_err(|_| "Failed to get token accounts")?;
-                    
-                    let accounts_array = Array::from(&accounts);
+                        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
+
+                    let accounts = Reflect::get(&result, &JsValue::from_str("value"))
+                        .map_err(|e| String::from(JsValueWrapper::from(e)))?;
+
                     let mut token_balances = Vec::new();
-                    
+                    let accounts_array = Array::from(&accounts);
+
                     for i in 0..accounts_array.length() {
-                        if let Some(account) = accounts_array.get(i).dyn_ref::<Object>() {
-                            let account_info = Reflect::get(&account, &JsValue::from_str("account"))?;
-                            let data = Reflect::get(&account_info, &JsValue::from_str("data"))?;
-                            
-                            let mint = Reflect::get(&data, &JsValue::from_str("mint"))?
+                        if let Some(account) = accounts_array.get(i).dyn_into::<Object>().ok() {
+                            let account_data = Reflect::get(&account, &JsValue::from_str("account"))
+                                .map_err(|e| String::from(JsValueWrapper::from(e)))?;
+                            let data = Reflect::get(&account_data, &JsValue::from_str("data"))
+                                .map_err(|e| String::from(JsValueWrapper::from(e)))?;
+                            let mint = Reflect::get(&data, &JsValue::from_str("mint"))
+                                .map_err(|e| String::from(JsValueWrapper::from(e)))?
                                 .as_string()
-                                .ok_or("Invalid mint address")?;
-                            
-                            let amount = Reflect::get(&data, &JsValue::from_str("amount"))?
+                                .ok_or("Invalid mint")?;
+                            let amount = Reflect::get(&data, &JsValue::from_str("amount"))
+                                .map_err(|e| String::from(JsValueWrapper::from(e)))?
                                 .as_f64()
-                                .ok_or("Invalid token amount")?;
-                            
-                            let decimals = Reflect::get(&data, &JsValue::from_str("decimals"))?
+                                .ok_or("Invalid amount")?;
+                            let decimals = Reflect::get(&data, &JsValue::from_str("decimals"))
+                                .map_err(|e| String::from(JsValueWrapper::from(e)))?
                                 .as_f64()
                                 .ok_or("Invalid decimals")? as u8;
-                            
+
                             token_balances.push(TokenBalance {
                                 mint,
                                 amount: amount / 10f64.powi(decimals as i32),
@@ -211,13 +208,10 @@ impl WalletContext {
                             });
                         }
                     }
-                    
+
                     Ok(token_balances)
                 }
-                Some(WalletType::MetaMask) => {
-                    // MetaMask token balance implementation would go here
-                    Ok(Vec::new())
-                }
+                Some(WalletType::MetaMask) => Ok(Vec::new()),
                 None => Err("No wallet connected".to_string()),
             }
         } else {

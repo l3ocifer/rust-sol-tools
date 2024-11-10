@@ -10,10 +10,10 @@ pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), Strin
     {
         let window = web_sys::window().ok_or("No window object")?;
         let solana = Reflect::get(&window, &JsValue::from_str("solana"))
-            .map_err(|e| JsValueWrapper::from(e).into())?;
+            .map_err(|e| String::from(JsValueWrapper::from(e)))?;
         
         let is_phantom = Reflect::get(&solana, &JsValue::from_str("isPhantom"))
-            .map_err(|e| JsValueWrapper::from(e).into())?
+            .map_err(|e| String::from(JsValueWrapper::from(e)))?
             .as_bool()
             .unwrap_or(false);
         
