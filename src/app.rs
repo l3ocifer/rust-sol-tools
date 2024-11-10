@@ -4,6 +4,8 @@ use leptos_router::*;
 use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::token::{CreateTokenParams, NetworkType};
+use crate::utils::pinata::server::upload_metadata_to_pinata;
+use anyhow::Result;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -74,28 +76,77 @@ fn CreateTokenPage() -> impl IntoView {
     let (network, set_network) = create_signal(NetworkType::Devnet);
     let (loading, set_loading) = create_signal(false);
     let (error, set_error) = create_signal(Option::<String>::None);
+    let (success, set_success) = create_signal(Option::<String>::None);
+    let (status, set_status) = create_signal(String::new());
 
     let handle_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         
-        let params = CreateTokenParams {
-            name: token_name.get_untracked(),
-            symbol: token_symbol.get_untracked(),
-            description: "".to_string(), // Default description
-            metadata_uri: token_uri.get_untracked(),
-            decimals: decimals.get_untracked(),
-            initial_supply: initial_supply.get_untracked(),
-            is_mutable: is_mutable.get_untracked(),
-            freeze_authority: freeze_authority.get_untracked(),
-            rate_limit: rate_limit.get_untracked(),
-            transfer_fee: transfer_fee.get_untracked(),
-            max_transfer_amount: max_transfer_amount.get_untracked(),
-            network: network.get_untracked(),
-            #[cfg(not(target_arch = "wasm32"))]
-            payer: None,
-        };
+        let token_name = token_name.get_untracked();
+        let token_symbol = token_symbol.get_untracked();
+        let token_uri = token_uri.get_untracked();
+        let network = network.get_untracked();
 
-        // Token creation logic will be implemented here
+        set_loading.set(true);
+        set_error.set(None);
+        set_success.set(None);
+        set_status.set("Creating token metadata...".to_string());
+
+        spawn_local(async move {
+            let metadata = serde_json::json!({
+                "name": token_name,
+                "symbol": token_symbol,
+                "description": format!("{} token", token_name),
+                "image": token_uri,
+                "attributes": []
+            });
+
+            match upload_metadata_to_pinata(
+                &std::env::var("PINATA_API_KEY").unwrap_or_default(),
+                &std::env::var("PINATA_SECRET_KEY").unwrap_or_default(),
+                &metadata
+            ).await {
+                Ok(metadata_uri) => {
+                    set_status.set("Creating token...".to_string());
+
+                    let params = CreateTokenParams {
+                        name: token_name,
+                        symbol: token_symbol,
+                        description: format!("{} token", token_name),
+                        metadata_uri,
+                        decimals: decimals.get_untracked(),
+                        initial_supply: initial_supply.get_untracked(),
+                        is_mutable: is_mutable.get_untracked(),
+                        freeze_authority: freeze_authority.get_untracked(),
+                        rate_limit: rate_limit.get_untracked(),
+                        transfer_fee: transfer_fee.get_untracked(),
+                        max_transfer_amount: max_transfer_amount.get_untracked(),
+                        network,
+                        #[cfg(not(target_arch = "wasm32"))]
+                        payer: None,
+                    };
+
+                    match create_token(params).await {
+                        Ok(result) => {
+                            set_success.set(Some(format!(
+                                "Token created successfully! Mint address: {}",
+                                result.mint
+                            )));
+                            set_status.set(format!("View on Explorer: {}", result.explorer_url));
+                        }
+                        Err(e) => {
+                            set_error.set(Some(format!("Failed to create token: {}", e)));
+                            set_status.set("Token creation failed".to_string());
+                        }
+                    }
+                }
+                Err(e) => {
+                    set_error.set(Some(format!("Failed to upload metadata: {}", e)));
+                    set_status.set("Metadata upload failed".to_string());
+                }
+            }
+            set_loading.set(false);
+        });
     };
 
     view! {
