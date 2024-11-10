@@ -22,7 +22,6 @@ thiserror = "1.0"
 bs58 = "0.5"
 env_logger = "0.11"
 solana-program = "1.16"
-mpl-token-metadata = "1.13"
 spl-token = "3.5"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
