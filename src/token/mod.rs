@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 
-// Re-export NetworkType
-pub use crate::utils::contract::NetworkType;
+// Re-export NetworkType and TokenCreationResult
+pub use crate::utils::contract::{NetworkType, TokenCreationResult};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateTokenParams {
