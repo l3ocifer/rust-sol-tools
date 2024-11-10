@@ -29,6 +29,22 @@ pub enum NetworkType {
     Mainnet,
 }
 
+impl NetworkType {
+    pub fn rpc_url(&self) -> &str {
+        match self {
+            NetworkType::Devnet => "https://api.devnet.solana.com",
+            NetworkType::Mainnet => "https://api.mainnet-beta.solana.com",
+        }
+    }
+
+    pub fn explorer_url(&self) -> &str {
+        match self {
+            NetworkType::Devnet => "https://explorer.solana.com/address/{}?cluster=devnet",
+            NetworkType::Mainnet => "https://explorer.solana.com/address/{}",
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenCreationResult {
     pub status: String,
