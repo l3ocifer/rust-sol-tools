@@ -2,7 +2,7 @@
 pub mod wasm {
     use wasm_bindgen::prelude::*;
     use serde_json::Value;
-    use js_sys::{Promise, Error, Reflect};
+    use js_sys::{Promise, Reflect};
     use wasm_bindgen_futures::JsFuture;
     use std::error::Error as StdError;
 
@@ -23,19 +23,44 @@ pub mod wasm {
 
     impl StdError for JsError {}
 
-    pub async fn upload_metadata_to_pinata(api_key: &str, api_secret: &str, metadata: &Value) -> Result<String, Box<dyn StdError>> {
-        let js_metadata = serde_wasm_bindgen::to_value(metadata)?;
-        let promise = upload_to_pinata(api_key, api_secret, &js_metadata);
-        let result = JsFuture::from(promise)
-            .await
-            .map_err(|e| Box::new(JsError(e.as_string().unwrap_or_default())) as Box<dyn StdError>)?;
-        
-        let ipfs_hash = Reflect::get(&result, &"IpfsHash".into())
-            .map_err(|e| Box::new(JsError(e.as_string().unwrap_or_default())))?
-            .as_string()
-            .ok_or_else(|| Box::new(JsError("Failed to get IPFS hash".to_string())))?;
+    pub async fn upload_metadata_to_pinata(
+        api_key: &str,
+        secret_key: &str,
+        metadata: &serde_json::Value,
+    ) -> Result<String, String> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let window = web_sys::window().ok_or("No window object found")?;
+            let fetch = window.fetch_with_request(&request)?;
             
-        Ok(format!("ipfs://{}", ipfs_hash))
+            // Convert the Promise directly to JsFuture
+            let response = JsFuture::from(fetch)
+                .await
+                .map_err(|e| format!("Failed to fetch: {:?}", e))?;
+
+            let response: web_sys::Response = response
+                .dyn_into()
+                .map_err(|_| "Failed to convert response")?;
+
+            // Convert the Promise returned by text() to JsFuture
+            let text = JsFuture::from(
+                response
+                    .text()
+                    .map_err(|_| "Failed to get response text")?
+            )
+            .await
+            .map_err(|_| "Failed to read response text")?;
+
+            let ipfs_hash = text
+                .as_string()
+                .ok_or("Invalid response format")?;
+
+            Ok(format!("https://gateway.pinata.cloud/ipfs/{}", ipfs_hash))
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            Err("Pinata upload not supported in non-WASM environment".to_string())
+        }
     }
 }
 
