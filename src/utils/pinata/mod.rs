@@ -33,7 +33,7 @@ pub mod server {
         let part = Part::text(json_str).file_name("metadata.json");
         let form = Form::new().part("file", part);
 
-        let response = client
+        let _response = client
             .post("https://api.pinata.cloud/pinning/pinFileToIPFS")
             .header("pinata_api_key", api_key)
             .header("pinata_secret_api_key", api_secret)
@@ -41,7 +41,7 @@ pub mod server {
             .send()
             .await?;
 
-        let result: Value = response.json().await?;
+        let result: Value = _response.json().await?;
         let ipfs_hash = result["IpfsHash"]
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("Invalid response from Pinata"))?;

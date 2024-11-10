@@ -1,6 +1,5 @@
 use borsh::{BorshSerialize, BorshDeserialize};
 use solana_sdk::program_pack::Pack;
-use spl_token_2022::state::Mint as Token2022Mint;
 use spl_token::state::Mint as TokenMint;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -15,10 +14,7 @@ use {
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
-    spl_token_2022::{
-        instruction as token_instruction,
-        state::Mint,
-    },
+    spl_token_2022::instruction as token_instruction,
     mpl_token_metadata::{
         ID as TOKEN_METADATA_PROGRAM_ID,
         types::DataV2,
