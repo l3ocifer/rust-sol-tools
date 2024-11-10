@@ -4,7 +4,7 @@ use leptos_router::*;
 use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::token::{create_token, CreateTokenParams, NetworkType};
-use crate::utils::pinata::server::upload_metadata_to_pinata;
+use crate::utils::pinata::upload_metadata_to_pinata;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -82,6 +82,7 @@ fn CreateTokenPage() -> impl IntoView {
         ev.prevent_default();
         
         let token_name = token_name.get_untracked();
+        let token_name_clone = token_name.clone();
         let token_symbol = token_symbol.get_untracked();
         let token_uri = token_uri.get_untracked();
         let network = network.get();
@@ -108,7 +109,7 @@ fn CreateTokenPage() -> impl IntoView {
                     let params = CreateTokenParams {
                         name: token_name,
                         symbol: token_symbol,
-                        description: format!("{} token", token_name),
+                        description: format!("{} token", token_name_clone),
                         metadata_uri,
                         decimals: decimals.get_untracked(),
                         initial_supply: initial_supply.get_untracked(),
@@ -300,10 +301,10 @@ fn CreateTokenPage() -> impl IntoView {
                                 });
                             }
                         >
-                            <option value="devnet" selected=move || *network.get() == NetworkType::Devnet>
+                            <option value="devnet" selected=move || network.get() == NetworkType::Devnet>
                                 "Devnet"
                             </option>
-                            <option value="mainnet" selected=move || *network.get() == NetworkType::Mainnet>
+                            <option value="mainnet" selected=move || network.get() == NetworkType::Mainnet>
                                 "Mainnet"
                             </option>
                         </select>

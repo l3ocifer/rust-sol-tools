@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use {
     solana_sdk::signature::Keypair,
     solana_program::program_pack::Pack,
-    spl_token::state::Mint,
+    spl_token_2022::state::Mint,
     mpl_token_metadata::instruction::create_metadata_accounts_v3,
     mpl_token_metadata::pda::find_metadata_account,
 };

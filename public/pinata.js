@@ -1,15 +1,9 @@
 export async function uploadToPinata(apiKey, apiSecret, data) {
-    const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
-    
-    let formData = new FormData();
-    if (data instanceof File) {
-        formData.append('file', data);
-    } else {
-        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-        formData.append('file', blob, 'metadata.json');
-    }
+    const formData = new FormData();
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    formData.append('file', blob, 'metadata.json');
 
-    const response = await fetch(url, {
+    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
         method: 'POST',
         headers: {
             'pinata_api_key': apiKey,
@@ -22,6 +16,5 @@ export async function uploadToPinata(apiKey, apiSecret, data) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result = await response.json();
-    return `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
+    return await response.json();
 } 
