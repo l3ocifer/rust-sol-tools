@@ -8,7 +8,7 @@ use super::{WalletContext, WalletType, TokenBalance, JsValueWrapper};
 pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     let window = window().ok_or("No window object found")?;
     let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
-        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
+        .map_err(|e| JsValueWrapper::from(e).into())?;
 
     if ethereum.is_undefined() {
         return Err("MetaMask not installed".to_string());
@@ -20,39 +20,40 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     });
 
     let ethereum_obj = ethereum.dyn_into::<Object>()
-        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
+        .map_err(|e| JsValueWrapper::from(e).into())?;
 
     let request_method = Reflect::get(&ethereum_obj, &JsValue::from_str("request"))
-        .map_err(|e| JsValueWrapper::from(e).into::<String>())?
+        .map_err(|e| JsValueWrapper::from(e).into())?
         .dyn_into::<Function>()
-        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
+        .map_err(|e| JsValueWrapper::from(e).into())?;
 
     let params = Array::new();
-    let request_obj = Object::new();
-    Reflect::set(&request_obj, &JsValue::from_str("method"), &JsValue::from_str("eth_requestAccounts"))
-        .map_err(|_| "Failed to set request method")?;
-    Reflect::set(&request_obj, &JsValue::from_str("params"), &params)
-        .map_err(|_| "Failed to set request params")?;
+    let request = Object::new();
+    Reflect::set(&request, &JsValue::from_str("method"), &JsValue::from_str("eth_requestAccounts"))
+        .map_err(|e| JsValueWrapper::from(e).into())?;
+    Reflect::set(&request, &JsValue::from_str("params"), &params)
+        .map_err(|e| JsValueWrapper::from(e).into())?;
 
-    let promise = request_method.call1(&ethereum, &request_obj)
-        .map_err(|_| "Failed to call request method")?;
-
+    let promise = request_method.call1(&ethereum_obj, &request)
+        .map_err(|e| JsValueWrapper::from(e).into())?;
     let accounts = JsFuture::from(Promise::from(promise))
         .await
-        .map_err(|_| "User rejected connection")?;
+        .map_err(|e| JsValueWrapper::from(e).into())?;
 
     let accounts_array = Array::from(&accounts);
     if accounts_array.length() == 0 {
         return Err("No accounts found".to_string());
     }
 
-    let address = accounts_array.get(0).as_string()
+    let address = accounts_array.get(0)
+        .as_string()
         .ok_or("Invalid address format")?;
 
     ctx.state.update(|state| {
         state.connected = true;
         state.address = Some(address);
         state.wallet_type = Some(WalletType::MetaMask);
+        state.error = None;
         state.connecting = false;
     });
 
