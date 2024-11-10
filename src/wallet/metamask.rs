@@ -8,7 +8,7 @@ use super::{WalletContext, WalletType, TokenBalance};
 pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     let window = window().ok_or("No window object found")?;
     let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
-        .map_err(|_| "MetaMask not installed")?;
+        .map_err(|e| JsValueWrapper(e).into())?;
 
     if ethereum.is_undefined() {
         return Err("MetaMask not installed".to_string());
@@ -21,12 +21,12 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
 
     let ethereum_clone = ethereum.clone();
     let ethereum_obj = ethereum.dyn_into::<Object>()
-        .map_err(|_| "Failed to cast ethereum object")?;
+        .map_err(|e| JsValueWrapper(e).into())?;
 
     let request_method = Reflect::get(&ethereum_obj, &JsValue::from_str("request"))
-        .map_err(|_| "ethereum.request not found")?
+        .map_err(|e| JsValueWrapper(e).into())?
         .dyn_into::<Function>()
-        .map_err(|_| "Failed to cast request method")?;
+        .map_err(|e| JsValueWrapper(e).into())?;
 
     let params = Array::new();
     let request_obj = Object::new();

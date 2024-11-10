@@ -15,9 +15,12 @@ pub use phantom::connect_phantom;
 #[cfg(target_arch = "wasm32")]
 pub use metamask::connect_metamask;
 
-impl From<JsValue> for String {
-    fn from(js: JsValue) -> Self {
-        js.as_string().unwrap_or_else(|| format!("{:?}", js))
+#[derive(Clone)]
+struct JsValueWrapper(JsValue);
+
+impl From<JsValueWrapper> for String {
+    fn from(wrapper: JsValueWrapper) -> Self {
+        wrapper.0.as_string().unwrap_or_else(|| format!("{:?}", wrapper.0))
     }
 }
 
