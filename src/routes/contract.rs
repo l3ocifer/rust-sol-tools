@@ -14,7 +14,7 @@ pub async fn create_token_route(req: web::Json<CreateTokenRequest>) -> impl Resp
     use crate::token::NetworkType;
     use solana_sdk::signer::keypair::Keypair;
 
-    let payer = match crate::utils::load_env_keypair("SOLANA_KEYPAIR_PATH") {
+    let _payer = match crate::utils::load_env_keypair("SOLANA_KEYPAIR_PATH") {
         Ok(keypair) => Some(keypair),
         Err(e) => {
             eprintln!("Error loading keypair: {}", e);

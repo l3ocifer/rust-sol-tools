@@ -12,7 +12,7 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
     let mint = Keypair::new();
     
     let mint_rent = 0; // Calculate proper rent
-    let mint_space = Mint::get_packed_len();
+    let mint_space = Mint::LEN;
     
     // Create metadata
     let metadata = DataV2 {

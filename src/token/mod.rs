@@ -1,11 +1,11 @@
 use serde::{Serialize, Deserialize};
-use solana_sdk::signer::keypair::Keypair;
 
 #[cfg(not(target_arch = "wasm32"))]
 use {
     solana_sdk::{
         pubkey::Pubkey,
         signer::Signer,
+        signature::Keypair,
     },
     mpl_token_metadata::{
         accounts::Metadata,

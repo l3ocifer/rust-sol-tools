@@ -22,7 +22,7 @@ thiserror = "1.0"
 bs58 = "0.5"
 env_logger = "0.11"
 solana-program = "1.16"
-spl-token = { version = "3.5", features = ["no-entrypoint"] }
+spl-token = { version = "4.0", features = ["no-entrypoint"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "0.2.89", features = ["serde"] }
