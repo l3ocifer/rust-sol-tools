@@ -22,7 +22,7 @@ thiserror = "1.0"
 bs58 = "0.5"
 env_logger = "0.11"
 solana-program = "1.16"
-spl-token = "3.5"
+spl-token = { version = "3.5", features = ["no-entrypoint"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "0.2.89", features = ["serde"] }
@@ -55,7 +55,6 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls", "multipart"] }
 hostname = "0.3"
 solana-sdk = "1.18"
 solana-client = "1.18"
-spl-token = "4.0"
 spl-associated-token-account = "2.0"
 spl-token-2022 = "0.9"
 mpl-token-metadata = "4.0"

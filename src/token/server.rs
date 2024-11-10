@@ -3,16 +3,8 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
 };
-use spl_token::{
-    instruction::initialize_mint,
-    state::Mint,
-};
-use solana_program::program_pack::Pack;
-use mpl_token_metadata::{
-    accounts::Metadata,
-    types::DataV2,
-    instructions::CreateMetadataAccountV3,
-};
+use spl_token::state::Mint;
+use mpl_token_metadata::types::DataV2;
 use super::{CreateTokenParams, TokenCreationResult};
 
 pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult> {

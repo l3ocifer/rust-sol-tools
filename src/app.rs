@@ -5,6 +5,7 @@ use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::token::{create_token, CreateTokenParams, NetworkType};
 use crate::utils::pinata::upload_metadata_to_pinata;
+use solana_sdk::signer::keypair::Keypair;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -119,8 +120,7 @@ fn CreateTokenPage() -> impl IntoView {
                         transfer_fee: transfer_fee.get_untracked(),
                         max_transfer_amount: max_transfer_amount.get_untracked(),
                         network,
-                        #[cfg(not(target_arch = "wasm32"))]
-                        payer: None,
+                        payer: None::<Keypair>,
                     };
 
                     match create_token(params).await {

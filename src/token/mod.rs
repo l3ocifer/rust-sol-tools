@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use solana_sdk::signer::keypair::Keypair;
 
 #[cfg(not(target_arch = "wasm32"))]
 use {

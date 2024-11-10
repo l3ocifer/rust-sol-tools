@@ -12,6 +12,7 @@ pub struct CreateTokenRequest {
 pub async fn create_token_route(req: web::Json<CreateTokenRequest>) -> impl Responder {
     use crate::token::create_token;
     use crate::token::NetworkType;
+    use solana_sdk::signer::keypair::Keypair;
 
     let payer = match crate::utils::load_env_keypair("SOLANA_KEYPAIR_PATH") {
         Ok(keypair) => Some(keypair),
@@ -35,7 +36,7 @@ pub async fn create_token_route(req: web::Json<CreateTokenRequest>) -> impl Resp
         max_transfer_amount: None,
         network: NetworkType::Devnet,
         #[cfg(not(target_arch = "wasm32"))]
-        payer: None,
+        payer: None::<Keypair>,
     };
 
     match create_token(params).await {
