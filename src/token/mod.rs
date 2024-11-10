@@ -1,11 +1,12 @@
-use crate::utils::contract::{TokenConfig, TokenCreationResult, NetworkType};
-use solana_sdk::signature::Keypair;
+use serde::{Serialize, Deserialize};
+use crate::utils::contract::{self, NetworkType, TokenConfig, TokenCreationResult};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateTokenParams {
     pub name: String,
     pub symbol: String,
-    pub uri: String,
+    pub description: String,
+    pub metadata_uri: String,
     pub decimals: u8,
     pub initial_supply: u64,
     pub is_mutable: bool,
@@ -15,7 +16,7 @@ pub struct CreateTokenParams {
     pub max_transfer_amount: Option<u64>,
     pub network: NetworkType,
     #[cfg(not(target_arch = "wasm32"))]
-    pub payer: Option<Keypair>,
+    pub payer: Option<solana_sdk::signature::Keypair>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -23,7 +24,7 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
     let config = TokenConfig {
         name: params.name,
         symbol: params.symbol,
-        uri: params.uri,
+        uri: params.metadata_uri,
         decimals: params.decimals,
         initial_supply: params.initial_supply,
         is_mutable: params.is_mutable,
@@ -32,7 +33,14 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
         transfer_fee: params.transfer_fee,
         max_transfer_amount: params.max_transfer_amount,
         network: params.network,
+        #[cfg(not(target_arch = "wasm32"))]
+        payer: params.payer,
     };
     
-    crate::utils::contract::create_token(config).await
+    contract::create_token(config).await
+}
+
+#[cfg(target_arch = "wasm32")]
+pub async fn create_token(_params: CreateTokenParams) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
+    Err("Token creation not supported in browser".into())
 } 

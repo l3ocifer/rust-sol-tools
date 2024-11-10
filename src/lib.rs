@@ -1,16 +1,7 @@
 pub mod app;
-pub mod wallet;
 pub mod token;
-
-#[cfg(target_arch = "wasm32")]
-pub mod utils {
-    pub mod pinata;
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 pub mod utils;
-
-#[cfg(not(target_arch = "wasm32"))]
+pub mod wallet;
 pub mod routes;
 
 #[cfg(target_arch = "wasm32")]

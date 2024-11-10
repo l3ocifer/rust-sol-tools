@@ -35,6 +35,8 @@ pub struct TokenConfig {
     pub transfer_fee: Option<u16>,
     pub max_transfer_amount: Option<u64>,
     pub network: NetworkType,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub payer: Option<solana_sdk::signature::Keypair>,
 }
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, PartialEq)]
@@ -70,7 +72,7 @@ pub struct TokenCreationResult {
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn create_token(config: TokenConfig) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
     let rpc_client = RpcClient::new(config.network.rpc_url());
-    let payer = Keypair::new();
+    let payer = config.payer.unwrap_or_else(Keypair::new);
 
     let mint_account = Keypair::new();
     let mint_rent = rpc_client.get_minimum_balance_for_rent_exemption(TokenMint::LEN)?;
