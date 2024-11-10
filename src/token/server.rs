@@ -7,6 +7,7 @@ use spl_token::{
     instruction::initialize_mint,
     state::Mint,
 };
+use solana_program::program_pack::Pack;
 use mpl_token_metadata::state::DataV2;
 use super::{CreateTokenParams, TokenCreationResult};
 
@@ -14,9 +15,8 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
     let payer = params.payer.unwrap_or_else(Keypair::new);
     let mint = Keypair::new();
     
-    // Initialize mint account
     let mint_rent = 0; // Calculate proper rent
-    let mint_space = Mint::LEN;
+    let mint_space = Mint::get_packed_len();
     
     // Create metadata
     let metadata = DataV2 {

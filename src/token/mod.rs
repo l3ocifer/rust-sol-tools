@@ -1,9 +1,16 @@
 use serde::{Serialize, Deserialize};
-use solana_sdk::signature::Keypair;
+
+#[cfg(not(target_arch = "wasm32"))]
+use {
+    solana_sdk::signature::Keypair,
+    solana_program::program_pack::Pack,
+    spl_token::state::Mint,
+    mpl_token_metadata::state::DataV2,
+};
 
 pub use crate::utils::contract::{NetworkType, TokenCreationResult};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateTokenParams {
     pub name: String,
