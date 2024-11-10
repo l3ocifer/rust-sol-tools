@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use leptos::SignalUpdate;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-use js_sys::{Array, Object, Promise, Reflect};
+use js_sys::{Array, Object, Promise, Reflect, Function};
 use web_sys::window;
 
 #[cfg(target_arch = "wasm32")]
@@ -86,21 +86,21 @@ impl WalletContext {
                     
                     let get_balance = Reflect::get(&connection, &JsValue::from_str("getBalance"))
                         .map_err(|e| JsValueWrapper::from(e).into())?
-                        .dyn_into::<js_sys::Function>()
+                        .dyn_into::<Function>()
                         .map_err(|e| JsValueWrapper::from(e).into())?;
                     
-                    let public_key = js_sys::Reflect::get(&solana, &JsValue::from_str("publicKey"))
-                        .map_err(|e| e.to_string())?;
+                    let public_key = Reflect::get(&solana, &JsValue::from_str("publicKey"))
+                        .map_err(|e| JsValueWrapper::from(e).into())?;
                     
                     let promise = get_balance.call1(&connection, &public_key)
-                        .map_err(|e| e.to_string())?;
+                        .map_err(|e| JsValueWrapper::from(e).into())?;
                     
                     let balance = JsFuture::from(Promise::from(promise))
                         .await
-                        .map_err(|e| e.to_string())?;
+                        .map_err(|e| JsValueWrapper::from(e).into())?;
                     
-                    let lamports = balance.as_f64().ok_or("Invalid balance format")?;
-                    Ok(lamports / 1e9) // Convert lamports to SOL
+                    let balance_number = balance.as_f64().ok_or("Invalid balance format")?;
+                    Ok(balance_number / 1e9) // Convert lamports to SOL
                 }
                 Some(WalletType::MetaMask) => {
                     let window = window().ok_or("No window object")?;
@@ -224,19 +224,10 @@ impl WalletContext {
     }
 
     pub async fn connect(&self, wallet_type: WalletType) -> Result<(), String> {
-        let result: Result<(), String> = match wallet_type {
+        match wallet_type {
             WalletType::Phantom => connect_phantom(self).await,
             WalletType::MetaMask => connect_metamask(self).await,
-        };
-
-        if let Err(e) = &result {
-            self.state.update(|state| {
-                state.error = Some(e.clone());
-                state.connecting = false;
-            });
         }
-
-        result
     }
 }
 
