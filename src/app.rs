@@ -310,6 +310,9 @@ fn SendTokenPage() -> impl IntoView {
     let (token_address, set_token_address) = create_signal(String::new());
     let (recipient_address, set_recipient_address) = create_signal(String::new());
     let (amount, set_amount) = create_signal(0u64);
+    let (status, set_status) = create_signal(String::new());
+    let (success, set_success) = create_signal(Option::<String>::None);
+    let (error, set_error) = create_signal(Option::<String>::None);
 
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
