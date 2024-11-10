@@ -37,4 +37,6 @@ pub mod server {
 
         Ok(format!("ipfs://{}", ipfs_hash))
     }
-} 
+}
+
+pub use self::server::upload_metadata_to_pinata; 

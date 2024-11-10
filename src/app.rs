@@ -4,7 +4,7 @@ use leptos_router::*;
 use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::token::{create_token, CreateTokenParams, NetworkType};
-use crate::utils::pinata::upload_metadata_to_pinata;
+use crate::utils::pinata::server::upload_metadata_to_pinata;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -73,9 +73,9 @@ fn CreateTokenPage() -> impl IntoView {
     let (transfer_fee, set_transfer_fee) = create_signal(Option::<u16>::None);
     let (max_transfer_amount, set_max_transfer_amount) = create_signal(Option::<u64>::None);
     let (network, set_network) = create_signal(NetworkType::Devnet);
-    let (loading, set_loading) = create_signal(false);
-    let (error, set_error) = create_signal(Option::<String>::None);
-    let (success, set_success) = create_signal(Option::<String>::None);
+    let (loading, _set_loading) = create_signal(false);
+    let (error, _set_error) = create_signal(Option::<String>::None);
+    let (success, _set_success) = create_signal(Option::<String>::None);
     let (status, set_status) = create_signal(String::new());
 
     let handle_submit = move |ev: SubmitEvent| {
@@ -84,11 +84,8 @@ fn CreateTokenPage() -> impl IntoView {
         let token_name = token_name.get_untracked();
         let token_symbol = token_symbol.get_untracked();
         let token_uri = token_uri.get_untracked();
-        let network = network.get_untracked();
+        let network = network.get();
 
-        set_loading.set(true);
-        set_error.set(None);
-        set_success.set(None);
         set_status.set("Creating token metadata...".to_string());
 
         spawn_local(async move {
@@ -127,24 +124,17 @@ fn CreateTokenPage() -> impl IntoView {
 
                     match create_token(params).await {
                         Ok(result) => {
-                            set_success.set(Some(format!(
-                                "Token created successfully! Mint address: {}",
-                                result.mint
-                            )));
                             set_status.set(format!("View on Explorer: {}", result.explorer_url));
                         }
                         Err(e) => {
-                            set_error.set(Some(format!("Failed to create token: {}", e)));
-                            set_status.set("Token creation failed".to_string());
+                            set_status.set(format!("Token creation failed: {}", e));
                         }
                     }
                 }
                 Err(e) => {
-                    set_error.set(Some(format!("Failed to upload metadata: {}", e)));
-                    set_status.set("Metadata upload failed".to_string());
+                    set_status.set(format!("Metadata upload failed: {}", e));
                 }
             }
-            set_loading.set(false);
         });
     };
 
@@ -310,10 +300,10 @@ fn CreateTokenPage() -> impl IntoView {
                                 });
                             }
                         >
-                            <option value="devnet" selected=move || network() == NetworkType::Devnet>
+                            <option value="devnet" selected=move || *network.get() == NetworkType::Devnet>
                                 "Devnet"
                             </option>
-                            <option value="mainnet" selected=move || network() == NetworkType::Mainnet>
+                            <option value="mainnet" selected=move || *network.get() == NetworkType::Mainnet>
                                 "Mainnet"
                             </option>
                         </select>
@@ -360,9 +350,9 @@ fn SendTokenPage() -> impl IntoView {
     let (token_address, set_token_address) = create_signal(String::new());
     let (recipient_address, set_recipient_address) = create_signal(String::new());
     let (amount, set_amount) = create_signal(0u64);
-    let (loading, set_loading) = create_signal(false);
-    let (error_msg, set_error_msg) = create_signal(Option::<String>::None);
-    let (success_msg, set_success_msg) = create_signal(Option::<String>::None);
+    let (loading, _set_loading) = create_signal(false);
+    let (error_msg, _set_error_msg) = create_signal(Option::<String>::None);
+    let (success_msg, _set_success_msg) = create_signal(Option::<String>::None);
 
     view! {
         <div class="container">

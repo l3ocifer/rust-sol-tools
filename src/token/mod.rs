@@ -29,7 +29,7 @@ pub struct CreateTokenParams {
     pub payer: Option<Keypair>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum NetworkType {
     Devnet,
     Mainnet,
