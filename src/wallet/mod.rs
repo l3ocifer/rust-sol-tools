@@ -25,6 +25,12 @@ impl From<JsValueWrapper> for String {
     }
 }
 
+impl From<JsValue> for JsValueWrapper {
+    fn from(value: JsValue) -> Self {
+        JsValueWrapper(value)
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TokenBalance {
     pub mint: String,
@@ -73,15 +79,15 @@ impl WalletContext {
                 Some(WalletType::Phantom) => {
                     let window = window().ok_or("No window object")?;
                     let solana = Reflect::get(&window, &JsValue::from_str("solana"))
-                        .map_err(|e| JsValueWrapper(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into())?;
                     
-                    let connection = js_sys::Reflect::get(&solana, &JsValue::from_str("connection"))
-                        .map_err(|e| e.to_string())?;
+                    let connection = Reflect::get(&solana, &JsValue::from_str("connection"))
+                        .map_err(|e| JsValueWrapper::from(e).into())?;
                     
-                    let get_balance = js_sys::Reflect::get(&connection, &JsValue::from_str("getBalance"))
-                        .map_err(|e| e.to_string())?
+                    let get_balance = Reflect::get(&connection, &JsValue::from_str("getBalance"))
+                        .map_err(|e| JsValueWrapper::from(e).into())?
                         .dyn_into::<js_sys::Function>()
-                        .map_err(|e| e.to_string())?;
+                        .map_err(|e| JsValueWrapper::from(e).into())?;
                     
                     let public_key = js_sys::Reflect::get(&solana, &JsValue::from_str("publicKey"))
                         .map_err(|e| e.to_string())?;
@@ -99,7 +105,7 @@ impl WalletContext {
                 Some(WalletType::MetaMask) => {
                     let window = window().ok_or("No window object")?;
                     let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
-                        .map_err(|e| JsValueWrapper(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into())?;
                     
                     let params = Array::new();
                     params.push(&JsValue::from_str(&address));
