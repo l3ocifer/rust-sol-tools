@@ -5,10 +5,9 @@ use {
     solana_sdk::signature::Keypair,
     solana_program::program_pack::Pack,
     spl_token::state::Mint,
-    mpl_token_metadata::state::DataV2,
+    mpl_token_metadata::instruction::create_metadata_accounts_v3,
+    mpl_token_metadata::pda::find_metadata_account,
 };
-
-pub use crate::utils::contract::{NetworkType, TokenCreationResult};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,6 +27,20 @@ pub struct CreateTokenParams {
     #[cfg(not(target_arch = "wasm32"))]
     #[serde(skip)]
     pub payer: Option<Keypair>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub enum NetworkType {
+    Devnet,
+    Mainnet,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenCreationResult {
+    pub status: String,
+    pub mint: String,
+    pub explorer_url: String,
+    pub signature: String,
 }
 
 #[cfg(not(target_arch = "wasm32"))]

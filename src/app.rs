@@ -3,9 +3,8 @@ use leptos_meta::*;
 use leptos_router::*;
 use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
-use crate::token::{CreateTokenParams, NetworkType};
-use crate::utils::pinata::server::upload_metadata_to_pinata;
-use anyhow::Result;
+use crate::token::{create_token, CreateTokenParams, NetworkType};
+use crate::utils::pinata::upload_metadata_to_pinata;
 
 #[component]
 pub fn App() -> impl IntoView {
