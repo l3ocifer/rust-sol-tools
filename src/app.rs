@@ -4,6 +4,7 @@ use leptos_router::*;
 use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
 use crate::token::{create_token, CreateTokenParams};
+use crate::utils::contract::NetworkType;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -72,6 +73,7 @@ fn CreateTokenPage() -> impl IntoView {
     let (rate_limit, set_rate_limit) = create_signal(Option::<u64>::None);
     let (transfer_fee, set_transfer_fee) = create_signal(Option::<u16>::None);
     let (max_transfer_amount, set_max_transfer_amount) = create_signal(Option::<u64>::None);
+    let (network, set_network) = create_signal(NetworkType::Devnet);
     let (loading, set_loading) = create_signal(false);
     let (error, set_error) = create_signal(Option::<String>::None);
     let (success, set_success) = create_signal(Option::<String>::None);
@@ -286,6 +288,28 @@ fn CreateTokenPage() -> impl IntoView {
                                 }
                             />
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>"Network"</label>
+                        <select 
+                            class="select-input"
+                            on:change=move |ev| {
+                                let value = event_target_value(&ev);
+                                set_network(if value == "mainnet" {
+                                    NetworkType::Mainnet
+                                } else {
+                                    NetworkType::Devnet
+                                });
+                            }
+                        >
+                            <option value="devnet" selected=move || network() == NetworkType::Devnet>
+                                "Devnet"
+                            </option>
+                            <option value="mainnet" selected=move || network() == NetworkType::Mainnet>
+                                "Mainnet"
+                            </option>
+                        </select>
                     </div>
 
                     <div id="creation-status" class="status-message">

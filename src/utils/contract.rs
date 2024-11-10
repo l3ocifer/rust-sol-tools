@@ -34,6 +34,29 @@ pub struct TokenConfig {
     pub rate_limit: Option<u64>,
     pub transfer_fee: Option<u16>,
     pub max_transfer_amount: Option<u64>,
+    pub network: NetworkType,
+}
+
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize, PartialEq)]
+pub enum NetworkType {
+    Devnet,
+    Mainnet,
+}
+
+impl NetworkType {
+    pub fn rpc_url(&self) -> &str {
+        match self {
+            NetworkType::Devnet => "https://api.devnet.solana.com",
+            NetworkType::Mainnet => "https://api.mainnet-beta.solana.com",
+        }
+    }
+
+    pub fn explorer_url(&self) -> &str {
+        match self {
+            NetworkType::Devnet => "https://solscan.io/token/{}?cluster=devnet",
+            NetworkType::Mainnet => "https://solscan.io/token/{}",
+        }
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -45,14 +68,9 @@ pub struct TokenCreationResult {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn create_token(
-    payer: &Keypair,
-    config: TokenConfig,
-) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
-    let rpc_client = RpcClient::new_with_commitment(
-        "https://api.devnet.solana.com".to_string(),
-        CommitmentConfig::confirmed(),
-    );
+pub async fn create_token(config: TokenConfig) -> Result<TokenCreationResult, Box<dyn std::error::Error>> {
+    let rpc_client = RpcClient::new(config.network.rpc_url());
+    let payer = Keypair::new();
 
     let mint_account = Keypair::new();
     let mint_rent = rpc_client.get_minimum_balance_for_rent_exemption(TokenMint::LEN)?;
@@ -122,7 +140,7 @@ pub async fn create_token(
     Ok(TokenCreationResult {
         status: "success".to_string(),
         mint: mint_address.clone(),
-        explorer_url: format!("https://solscan.io/token/{}?cluster=devnet", mint_address),
+        explorer_url: format!("{}", config.network.explorer_url().replace("{}", &mint_address)),
         signature: signature.to_string(),
     })
 }

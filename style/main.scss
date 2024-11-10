@@ -176,6 +176,19 @@
   }
 }
 
+.select-input {
+  @apply w-full p-2 bg-transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-family);
+  letter-spacing: 0.1em;
+  
+  option {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+  }
+}
+
 // Mobile responsiveness
 @media (max-width: 768px) {
   .header {
