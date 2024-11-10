@@ -9,8 +9,8 @@ use solana_client::rpc_client::RpcClient;
 use spl_token::state::Mint;
 use solana_program::{program_pack::Pack, system_instruction};
 use mpl_token_metadata::{
-    instructions::CreateMetadataAccountV3InstructionArgs,
-    state::DataV2,
+    instruction::create_metadata_accounts_v3,
+    types::DataV2,
     pda::find_metadata_account,
     ID as TOKEN_METADATA_PROGRAM_ID,
 };
@@ -49,28 +49,50 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
     // Create metadata account
     let (metadata_account, _) = find_metadata_account(&mint.pubkey());
     
-    let metadata_instruction = CreateMetadataAccountV3InstructionArgs {
-        data: DataV2 {
-            name: params.name,
-            symbol: params.symbol,
-            uri: params.metadata_uri,
-            seller_fee_basis_points: 0,
-            creators: None,
-            collection: None,
-            uses: None,
-        },
-        is_mutable: params.is_mutable,
-        collection_details: None,
+    let metadata_instruction = create_metadata_accounts_v3(
+        TOKEN_METADATA_PROGRAM_ID,
         metadata_account,
-        mint: mint.pubkey(),
-        mint_authority: payer.pubkey(),
-        payer: payer.pubkey(),
-        update_authority: payer.pubkey(),
-        system_program: solana_program::system_program::id(),
-        rent: solana_program::sysvar::rent::id(),
-    }.instruction();
+        mint.pubkey(),
+        payer.pubkey(),
+        payer.pubkey(),
+        payer.pubkey(),
+        params.name,
+        params.symbol,
+        params.metadata_uri,
+        None,
+        0,
+        params.is_mutable,
+        None,
+        None,
+        None,
+    );
     
     instructions.push(metadata_instruction);
+
+    // Add mint instruction if initial supply > 0
+    if params.initial_supply > 0 {
+        let recipient_ata = spl_associated_token_account::get_associated_token_address(
+            &payer.pubkey(),
+            &mint.pubkey(),
+        );
+
+        instructions.extend_from_slice(&[
+            spl_associated_token_account::instruction::create_associated_token_account(
+                &payer.pubkey(),
+                &payer.pubkey(),
+                &mint.pubkey(),
+                &spl_token::id(),
+            ),
+            spl_token::instruction::mint_to(
+                &spl_token::id(),
+                &mint.pubkey(),
+                &recipient_ata,
+                &payer.pubkey(),
+                &[],
+                params.initial_supply,
+            )?,
+        ]);
+    }
 
     let recent_blockhash = client.get_latest_blockhash()?;
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
