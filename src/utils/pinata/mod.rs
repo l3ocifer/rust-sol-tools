@@ -1,8 +1,6 @@
 #[cfg(target_arch = "wasm32")]
 pub mod wasm {
     use wasm_bindgen::prelude::*;
-    use web_sys::File;
-    use anyhow::Result;
 
     #[wasm_bindgen(module = "/public/pinata.js")]
     extern "C" {

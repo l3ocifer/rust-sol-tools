@@ -96,7 +96,7 @@ pub async fn get_token_balances(address: &str) -> Result<Vec<TokenBalance>, Stri
 async fn get_erc20_balance(ethereum: &Object, address: &str, token_address: &str) -> Result<f64, String> {
     let function_signature = "70a08231"; // balanceOf(address)
     let padded_address = format!("{:0>64}", &address[2..]);
-    let data = format!("0x{}{}}", function_signature, padded_address);
+    let data = format!("0x{}{}", function_signature, padded_address);
 
     let params = Array::new();
     let call_obj = Object::new();
