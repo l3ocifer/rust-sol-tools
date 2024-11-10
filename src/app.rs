@@ -307,12 +307,12 @@ fn CreateTokenPage() -> impl IntoView {
 #[component]
 fn SendTokenPage() -> impl IntoView {
     let _wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
-    let (_token_address, _set_token_address) = create_signal(String::new());
-    let (_recipient_address, _set_recipient_address) = create_signal(String::new());
-    let (_amount, _set_amount) = create_signal(0u64);
-    let (loading, _set_loading) = create_signal(false);
-    let (error_msg, _set_error_msg) = create_signal(Option::<String>::None);
-    let (success_msg, _set_success_msg) = create_signal(Option::<String>::None);
+    let (token_address, set_token_address) = create_signal(String::new());
+    let (recipient_address, set_recipient_address) = create_signal(String::new());
+    let (amount, set_amount) = create_signal(0u64);
+    let (loading, set_loading) = create_signal(false);
+    let (error_msg, set_error_msg) = create_signal(Option::<String>::None);
+    let (success_msg, set_success_msg) = create_signal(Option::<String>::None);
 
     view! {
         <div class="container">
@@ -329,6 +329,48 @@ fn SendTokenPage() -> impl IntoView {
                         <div class="success-message">{msg}</div>
                     })}
                 </div>
+                <div class="form-group">
+                    <label for="token-address">"Token Address"</label>
+                    <input
+                        type="text"
+                        id="token-address"
+                        value=move || token_address.get()
+                        on:input=move |ev| {
+                            set_token_address(event_target_value(&ev));
+                        }
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="recipient">"Recipient Address"</label>
+                    <input
+                        type="text"
+                        id="recipient"
+                        value=move || recipient_address.get()
+                        on:input=move |ev| {
+                            set_recipient_address(event_target_value(&ev));
+                        }
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="amount">"Amount"</label>
+                    <input
+                        type="number"
+                        id="amount"
+                        value=move || amount.get().to_string()
+                        on:input=move |ev| {
+                            if let Ok(val) = event_target_value(&ev).parse::<u64>() {
+                                set_amount(val);
+                            }
+                        }
+                    />
+                </div>
+                <button
+                    type="submit"
+                    class="button"
+                    disabled=move || loading.get()
+                >
+                    {move || if loading.get() { "Sending..." } else { "Send" }}
+                </button>
             </form>
         </div>
     }
