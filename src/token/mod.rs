@@ -2,11 +2,15 @@ use serde::{Serialize, Deserialize};
 
 #[cfg(not(target_arch = "wasm32"))]
 use {
-    solana_sdk::signature::Keypair,
-    solana_program::program_pack::Pack,
-    spl_token_2022::state::Mint,
-    mpl_token_metadata::instruction::create_metadata_accounts_v3,
-    mpl_token_metadata::pda::find_metadata_account,
+    solana_sdk::{
+        pubkey::Pubkey,
+        signer::Signer,
+    },
+    mpl_token_metadata::{
+        accounts::Metadata,
+        instructions::CreateMetadataAccountV3,
+        types::DataV2,
+    },
 };
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -8,7 +8,11 @@ use spl_token::{
     state::Mint,
 };
 use solana_program::program_pack::Pack;
-use mpl_token_metadata::state::DataV2;
+use mpl_token_metadata::{
+    accounts::Metadata,
+    types::DataV2,
+    instructions::CreateMetadataAccountV3,
+};
 use super::{CreateTokenParams, TokenCreationResult};
 
 pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResult> {
