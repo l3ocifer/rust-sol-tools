@@ -1,9 +1,10 @@
 use serde::{Serialize, Deserialize};
+use solana_sdk::signature::Keypair;
 
-// Re-export NetworkType and TokenCreationResult
 pub use crate::utils::contract::{NetworkType, TokenCreationResult};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTokenParams {
     pub name: String,
     pub symbol: String,
@@ -18,7 +19,8 @@ pub struct CreateTokenParams {
     pub max_transfer_amount: Option<u64>,
     pub network: NetworkType,
     #[cfg(not(target_arch = "wasm32"))]
-    pub payer: Option<solana_sdk::signature::Keypair>,
+    #[serde(skip)]
+    pub payer: Option<Keypair>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
