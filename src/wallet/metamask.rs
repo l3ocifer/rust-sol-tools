@@ -61,7 +61,7 @@ pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     Ok(())
 }
 
-pub async fn get_token_balances(address: &str) -> Result<Vec<TokenBalance>, String> {
+pub(crate) async fn get_token_balances(address: &str) -> Result<Vec<TokenBalance>, String> {
     let window = window().ok_or("No window object found")?;
     let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
         .map_err(|e| String::from(JsValueWrapper::from(e)))?;
@@ -73,7 +73,6 @@ pub async fn get_token_balances(address: &str) -> Result<Vec<TokenBalance>, Stri
     let ethereum_obj = ethereum.dyn_into::<Object>()
         .map_err(|e| String::from(JsValueWrapper::from(e)))?;
 
-    // Get ERC20 token balances using eth_call
     let tokens = get_known_tokens();
     let mut token_balances = Vec::new();
 
@@ -139,14 +138,21 @@ async fn get_erc20_balance(ethereum: &Object, address: &str, token_address: &str
 fn get_known_tokens() -> Vec<TokenInfo> {
     vec![
         TokenInfo {
-            contract_address: "0x...".to_string(), // Add known token addresses
-            symbol: "TOKEN".to_string(),
-            name: "Token Name".to_string(),
+            contract_address: "0x6B175474E89094C44Da98b954EedeAC495271d0F".to_string(), // DAI
+            symbol: "DAI".to_string(),
+            name: "Dai Stablecoin".to_string(),
             decimals: 18,
+        },
+        TokenInfo {
+            contract_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".to_string(), // USDC
+            symbol: "USDC".to_string(),
+            name: "USD Coin".to_string(),
+            decimals: 6,
         }
     ]
 }
 
+#[derive(Clone)]
 struct TokenInfo {
     contract_address: String,
     symbol: String,

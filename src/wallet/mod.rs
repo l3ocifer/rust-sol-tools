@@ -154,7 +154,7 @@ impl WalletContext {
 
     #[cfg(target_arch = "wasm32")]
     pub async fn get_token_balances(&self) -> Result<Vec<TokenBalance>, String> {
-        if self.state.get().connected {
+        if let Some(address) = self.state.get().address {
             match self.state.get().wallet_type {
                 Some(WalletType::Phantom) => {
                     let window = window().ok_or("No window object found")?;
@@ -211,7 +211,10 @@ impl WalletContext {
 
                     Ok(token_balances)
                 }
-                Some(WalletType::MetaMask) => Ok(Vec::new()),
+                Some(WalletType::MetaMask) => {
+                    use crate::wallet::metamask::get_token_balances;
+                    get_token_balances(&address).await
+                }
                 None => Err("No wallet connected".to_string()),
             }
         } else {
