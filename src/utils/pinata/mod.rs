@@ -2,13 +2,12 @@
 pub mod wasm {
     use wasm_bindgen::prelude::*;
     use js_sys::Promise;
-    use web_sys::{RequestInit, Request};
     use wasm_bindgen_futures::JsFuture;
 
     #[wasm_bindgen(module = "/public/pinata.js")]
     extern "C" {
         #[wasm_bindgen(js_name = uploadToPinata)]
-        pub async fn upload_to_pinata(api_key: &str, api_secret: &str, data: &JsValue) -> Promise;
+        fn upload_to_pinata(api_key: &str, api_secret: &str, data: &JsValue) -> Promise;
     }
 
     pub async fn upload_metadata_to_pinata(
