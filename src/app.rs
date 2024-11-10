@@ -3,8 +3,7 @@ use leptos_meta::*;
 use leptos_router::*;
 use leptos::ev::SubmitEvent;
 use crate::wallet::{WalletProvider, WalletContext, WalletType};
-use crate::token::{create_token, CreateTokenParams};
-use crate::utils::contract::NetworkType;
+use crate::token::{CreateTokenParams, NetworkType};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -64,8 +63,7 @@ fn CreateTokenPage() -> impl IntoView {
     let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
     let (token_name, set_token_name) = create_signal(String::new());
     let (token_symbol, set_token_symbol) = create_signal(String::new());
-    let (token_description, set_token_description) = create_signal(String::new());
-    let (metadata_uri, set_metadata_uri) = create_signal(String::new());
+    let (token_uri, set_token_uri) = create_signal(String::new());
     let (decimals, set_decimals) = create_signal(9u8);
     let (initial_supply, set_initial_supply) = create_signal(1_000_000_000u64);
     let (is_mutable, set_is_mutable) = create_signal(true);
@@ -76,64 +74,35 @@ fn CreateTokenPage() -> impl IntoView {
     let (network, set_network) = create_signal(NetworkType::Devnet);
     let (loading, set_loading) = create_signal(false);
     let (error, set_error) = create_signal(Option::<String>::None);
-    let (success, set_success) = create_signal(Option::<String>::None);
-    let (status, set_status) = create_signal(String::new());
 
-    let on_submit = move |ev: SubmitEvent| {
+    let handle_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         
-        if !wallet_ctx.state.get().connected {
-            set_error.set(Some("Please connect your wallet first".to_string()));
-            return;
-        }
+        let params = CreateTokenParams {
+            name: token_name.get_untracked(),
+            symbol: token_symbol.get_untracked(),
+            description: "".to_string(), // Default description
+            metadata_uri: token_uri.get_untracked(),
+            decimals: decimals.get_untracked(),
+            initial_supply: initial_supply.get_untracked(),
+            is_mutable: is_mutable.get_untracked(),
+            freeze_authority: freeze_authority.get_untracked(),
+            rate_limit: rate_limit.get_untracked(),
+            transfer_fee: transfer_fee.get_untracked(),
+            max_transfer_amount: max_transfer_amount.get_untracked(),
+            network: network.get_untracked(),
+            #[cfg(not(target_arch = "wasm32"))]
+            payer: None,
+        };
 
-        set_loading.set(true);
-        set_error.set(None);
-        set_success.set(None);
-
-        spawn_local(async move {
-            let params = CreateTokenParams {
-                name: token_name.get_untracked(),
-                symbol: token_symbol.get_untracked(),
-                description: token_description.get_untracked(),
-                metadata_uri: metadata_uri.get_untracked(),
-                decimals: decimals.get_untracked(),
-                initial_supply: initial_supply.get_untracked(),
-                is_mutable: is_mutable.get_untracked(),
-                freeze_authority: freeze_authority.get_untracked(),
-                rate_limit: rate_limit.get_untracked(),
-                transfer_fee: transfer_fee.get_untracked(),
-                max_transfer_amount: max_transfer_amount.get_untracked(),
-                #[cfg(not(target_arch = "wasm32"))]
-                payer: None,
-            };
-
-            match create_token(params).await {
-                Ok(result) => {
-                    set_status.set(result.status);
-                    set_success.set(Some(format!(
-                        "Token created successfully!\n\
-                         Mint Address: {}\n\
-                         View on Solscan: {}\n\
-                         Transaction: {}",
-                        result.mint,
-                        result.explorer_url,
-                        result.signature
-                    )));
-                }
-                Err(e) => {
-                    set_error.set(Some(format!("Failed to create token: {}", e)));
-                }
-            }
-            set_loading.set(false);
-        });
+        // Token creation logic will be implemented here
     };
 
     view! {
         <div class="container">
             <h2 class="token-management">"Create Token"</h2>
             <div class="token-forms">
-                <form class="token-form" on:submit=on_submit>
+                <form class="token-form" on:submit=handle_submit>
                     <div class="form-group">
                         <label for="token_name">"Token Name"</label>
                         <input
@@ -161,25 +130,13 @@ fn CreateTokenPage() -> impl IntoView {
                     </div>
 
                     <div class="form-group">
-                        <label for="token_description">"Token Description"</label>
-                        <textarea
-                            id="token_description"
-                            required
-                            placeholder="Enter token description"
-                            on:input=move |ev| {
-                                set_token_description.set(event_target_value(&ev));
-                            }
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="metadata_uri">"Metadata URI"</label>
+                        <label for="token_uri">"Token URI"</label>
                         <input
                             type="text"
-                            id="metadata_uri"
-                            placeholder="Enter metadata URI from Pinata or similar service"
+                            id="token_uri"
+                            placeholder="Enter token URI"
                             on:input=move |ev| {
-                                set_metadata_uri.set(event_target_value(&ev));
+                                set_token_uri.set(event_target_value(&ev));
                             }
                         />
                     </div>
