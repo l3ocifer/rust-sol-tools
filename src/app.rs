@@ -433,26 +433,24 @@ fn WalletConnect() -> impl IntoView {
     });
 
     let connect_metamask = create_action(move |_: &()| {
-        let ctx = wallet_ctx.get();
         async move {
-            let _ = ctx.connect(WalletType::MetaMask).await;
+            let _ = wallet_ctx.connect(WalletType::MetaMask).await;
         }
     });
 
     let disconnect = create_action(move |_: &()| {
-        let ctx = wallet_ctx.get();
         async move {
-            ctx.disconnect();
+            wallet_ctx.disconnect();
         }
     });
 
     view! {
         <div class="wallet-connect">
-            {move || if wallet_ctx.get().state.get().connected {
+            {move || if wallet_ctx.state.get().connected {
                 view! {
                     <div class="wallet-info">
                         <div class="wallet-address">
-                            {wallet_ctx.get().state.get().address.clone().unwrap_or_default()}
+                            {wallet_ctx.state.get().address.clone().unwrap_or_default()}
                         </div>
                         <button class="disconnect-button"
                             on:click=move |_| disconnect.dispatch(())>

@@ -69,6 +69,13 @@ impl From<JsValue> for JsValueWrapper {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+impl From<JsValue> for String {
+    fn from(value: JsValue) -> Self {
+        JsValueWrapper::from(value).into()
+    }
+}
+
 impl WalletContext {
     pub fn new(state: RwSignal<WalletState>) -> Self {
         Self { state }
