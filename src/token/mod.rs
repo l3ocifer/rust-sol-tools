@@ -1,18 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 #[cfg(not(target_arch = "wasm32"))]
-use {
-    solana_sdk::{
-        pubkey::Pubkey,
-        signer::Signer,
-        signature::Keypair,
-    },
-    mpl_token_metadata::{
-        accounts::Metadata,
-        instructions::CreateMetadataAccountV3,
-        types::DataV2,
-    },
-};
+use solana_sdk::signature::Keypair;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -3,7 +3,8 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
 };
-use spl_token::state::Mint;
+use spl_token::{state::Mint, instruction::initialize_mint};
+use solana_program::program_pack::Pack;
 use mpl_token_metadata::types::DataV2;
 use super::{CreateTokenParams, TokenCreationResult};
 
