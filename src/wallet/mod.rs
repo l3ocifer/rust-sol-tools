@@ -15,6 +15,12 @@ pub use phantom::connect_phantom;
 #[cfg(target_arch = "wasm32")]
 pub use metamask::connect_metamask;
 
+impl From<JsValue> for String {
+    fn from(js: JsValue) -> Self {
+        js.as_string().unwrap_or_else(|| format!("{:?}", js))
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TokenBalance {
     pub mint: String,
@@ -57,31 +63,31 @@ impl WalletContext {
         });
     }
 
-    pub async fn get_sol_balance(&self) -> Result<f64, String> {
+    pub async fn get_balance(&self) -> Result<f64, String> {
         if let Some(address) = self.state.get().address {
             match self.state.get().wallet_type {
                 Some(WalletType::Phantom) => {
                     let window = web_sys::window().ok_or("No window object")?;
                     let solana = js_sys::Reflect::get(&window, &JsValue::from_str("solana"))
-                        .map_err(|_| "No solana object")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let connection = js_sys::Reflect::get(&solana, &JsValue::from_str("connection"))
-                        .map_err(|_| "No connection object")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let get_balance = js_sys::Reflect::get(&connection, &JsValue::from_str("getBalance"))
-                        .map_err(|_| "No getBalance method")?
+                        .map_err(|e| e.to_string())?
                         .dyn_into::<js_sys::Function>()
-                        .map_err(|_| "getBalance is not a function")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let public_key = js_sys::Reflect::get(&solana, &JsValue::from_str("publicKey"))
-                        .map_err(|_| "No publicKey")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let promise = get_balance.call1(&connection, &public_key)
-                        .map_err(|_| "Failed to call getBalance")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let balance = JsFuture::from(Promise::from(promise))
                         .await
-                        .map_err(|_| "Failed to get balance")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let lamports = balance.as_f64().ok_or("Invalid balance format")?;
                     Ok(lamports / 1e9) // Convert lamports to SOL
@@ -89,23 +95,28 @@ impl WalletContext {
                 Some(WalletType::MetaMask) => {
                     let window = web_sys::window().ok_or("No window object")?;
                     let ethereum = js_sys::Reflect::get(&window, &JsValue::from_str("ethereum"))
-                        .map_err(|_| "No ethereum object")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let params = Array::new();
                     params.push(&JsValue::from_str(&address));
                     params.push(&JsValue::from_str("latest"));
                     
                     let request = Object::new();
-                    Reflect::set(&request, &JsValue::from_str("method"), &JsValue::from_str("eth_getBalance"))?;
-                    Reflect::set(&request, &JsValue::from_str("params"), &params)?;
+                    Reflect::set(&request, &JsValue::from_str("method"), &JsValue::from_str("eth_getBalance"))
+                        .map_err(|e| e.to_string())?;
+                    Reflect::set(&request, &JsValue::from_str("params"), &params)
+                        .map_err(|e| e.to_string())?;
                     
-                    let request_fn = Reflect::get(&ethereum, &JsValue::from_str("request"))?
-                        .dyn_into::<js_sys::Function>()?;
+                    let request_fn = Reflect::get(&ethereum, &JsValue::from_str("request"))
+                        .map_err(|e| e.to_string())?
+                        .dyn_into::<js_sys::Function>()
+                        .map_err(|e| e.to_string())?;
                     
-                    let promise = request_fn.call1(&ethereum, &request)?;
+                    let promise = request_fn.call1(&ethereum, &request)
+                        .map_err(|e| e.to_string())?;
                     let balance = JsFuture::from(Promise::from(promise))
                         .await
-                        .map_err(|_| "Failed to get balance")?;
+                        .map_err(|e| e.to_string())?;
                     
                     let hex_balance = balance.as_string().ok_or("Invalid balance format")?;
                     let wei = u128::from_str_radix(&hex_balance[2..], 16).map_err(|_| "Invalid hex balance")?;

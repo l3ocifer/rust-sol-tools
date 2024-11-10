@@ -416,13 +416,15 @@ fn WalletConnect() -> impl IntoView {
     
     create_effect(move |_| {
         if state.get().connected {
-            let ctx = wallet_ctx.get_value();
             spawn_local(async move {
-                if let Ok(balance) = ctx.get_sol_balance().await {
+                let ctx = wallet_ctx.get_value();
+                if let Ok(balance) = ctx.get_balance().await {
                     set_sol_balance.set(balance);
                 }
-                if let Ok(balance) = ctx.get_token_balance().await {
-                    set_token_balance.set(balance);
+                if let Ok(balances) = ctx.get_token_balances().await {
+                    if let Some(first_balance) = balances.first() {
+                        set_token_balance.set(first_balance.amount);
+                    }
                 }
             });
         }
