@@ -406,50 +406,44 @@ fn SendTokenPage() -> impl IntoView {
 
 #[component]
 fn WalletConnect() -> impl IntoView {
-    let wallet_ctx = use_context::<WalletContext>().expect("WalletContext not found");
-    let state = wallet_ctx.state;
-    let (sol_balance, set_sol_balance) = create_signal(0.0);
-    let (token_balance, set_token_balance) = create_signal(0.0);
-    let (_balance_error, set_balance_error) = create_signal(None::<String>);
-    
-    let wallet_ctx = store_value(wallet_ctx);
+    let wallet_ctx = use_context::<WalletContext>().expect("No wallet context found");
+    let (_balance_error, _set_balance_error) = create_signal(None::<String>);
     
     create_effect(move |_| {
-        if state.get().connected {
+        if wallet_ctx.get().state.get().connected {
             spawn_local(async move {
-                let ctx = wallet_ctx.get_value();
+                let ctx = wallet_ctx.get();
                 if let Ok(balance) = ctx.get_balance().await {
-                    set_sol_balance.set(balance);
+                    // Handle SOL balance update
+                    ctx.state.update(|state| {
+                        state.sol_balance = balance;
+                    });
                 }
                 if let Ok(balances) = ctx.get_token_balances().await {
-                    if let Some(first_balance) = balances.first() {
-                        set_token_balance.set(first_balance.amount);
-                    }
+                    ctx.state.update(|state| {
+                        state.token_balances = balances;
+                    });
                 }
             });
         }
     });
 
     let connect_phantom = create_action(move |_: &()| {
-        let ctx = wallet_ctx.get_value();
+        let ctx = wallet_ctx.get();
         async move {
-            if let Err(e) = ctx.connect(WalletType::Phantom).await {
-                ctx.set_error(&e);
-            }
+            let _ = ctx.connect(WalletType::Phantom).await;
         }
     });
-    
+
     let connect_metamask = create_action(move |_: &()| {
-        let ctx = wallet_ctx.get_value();
+        let ctx = wallet_ctx.get();
         async move {
-            if let Err(e) = ctx.connect(WalletType::MetaMask).await {
-                ctx.set_error(&e);
-            }
+            let _ = ctx.connect(WalletType::MetaMask).await;
         }
     });
-    
+
     let disconnect = create_action(move |_: &()| {
-        let ctx = wallet_ctx.get_value();
+        let ctx = wallet_ctx.get();
         async move {
             ctx.disconnect();
         }
@@ -457,32 +451,27 @@ fn WalletConnect() -> impl IntoView {
 
     view! {
         <div class="wallet-connect">
-            {move || if state.get().connected {
+            {move || if wallet_ctx.get().state.get().connected {
                 view! {
                     <div class="wallet-info">
-                        <span class="wallet-address">{state.get().address.clone().unwrap_or_default()}</span>
-                        <div class="balance-info">
-                            <div class="balance-item">
-                                <span class="balance-label">"SOL Balance:"</span>
-                                <span class="balance-value">{format!("{:.4} SOL", sol_balance.get())}</span>
-                            </div>
-                            <div class="balance-item">
-                                <span class="balance-label">"Token Balance:"</span>
-                                <span class="balance-value">{format!("{:.2}", token_balance.get())}</span>
-                            </div>
+                        <div class="wallet-address">
+                            {wallet_ctx.get().state.get().address.clone().unwrap_or_default()}
                         </div>
-                        <button class="button" on:click=move |_| disconnect.dispatch(())>
+                        <button class="disconnect-button"
+                            on:click=move |_| disconnect.dispatch(())>
                             "Disconnect"
                         </button>
                     </div>
                 }
             } else {
                 view! {
-                    <div class="wallet-buttons">
-                        <button class="button" on:click=move |_| connect_phantom.dispatch(())>
+                    <div class="connect-buttons">
+                        <button class="connect-button"
+                            on:click=move |_| connect_phantom.dispatch(())>
                             "Connect Phantom"
                         </button>
-                        <button class="button" on:click=move |_| connect_metamask.dispatch(())>
+                        <button class="connect-button"
+                            on:click=move |_| connect_metamask.dispatch(())>
                             "Connect MetaMask"
                         </button>
                     </div>

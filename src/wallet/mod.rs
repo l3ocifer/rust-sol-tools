@@ -79,25 +79,25 @@ impl WalletContext {
                 Some(WalletType::Phantom) => {
                     let window = window().ok_or("No window object")?;
                     let solana = Reflect::get(&window, &JsValue::from_str("solana"))
-                        .map_err(|e| JsValueWrapper::from(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
                     
                     let connection = Reflect::get(&solana, &JsValue::from_str("connection"))
-                        .map_err(|e| JsValueWrapper::from(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
                     
                     let get_balance = Reflect::get(&connection, &JsValue::from_str("getBalance"))
-                        .map_err(|e| JsValueWrapper::from(e).into())?
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?
                         .dyn_into::<Function>()
-                        .map_err(|e| JsValueWrapper::from(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
                     
                     let public_key = Reflect::get(&solana, &JsValue::from_str("publicKey"))
-                        .map_err(|e| JsValueWrapper::from(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
                     
                     let promise = get_balance.call1(&connection, &public_key)
-                        .map_err(|e| JsValueWrapper::from(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
                     
                     let balance = JsFuture::from(Promise::from(promise))
                         .await
-                        .map_err(|e| JsValueWrapper::from(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
                     
                     let balance_number = balance.as_f64().ok_or("Invalid balance format")?;
                     Ok(balance_number / 1e9) // Convert lamports to SOL
@@ -105,7 +105,7 @@ impl WalletContext {
                 Some(WalletType::MetaMask) => {
                     let window = window().ok_or("No window object")?;
                     let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
-                        .map_err(|e| JsValueWrapper::from(e).into())?;
+                        .map_err(|e| JsValueWrapper::from(e).into::<String>())?;
                     
                     let params = Array::new();
                     params.push(&JsValue::from_str(&address));
@@ -225,8 +225,8 @@ impl WalletContext {
 
     pub async fn connect(&self, wallet_type: WalletType) -> Result<(), String> {
         match wallet_type {
-            WalletType::Phantom => connect_phantom(self).await,
-            WalletType::MetaMask => connect_metamask(self).await,
+            WalletType::Phantom => phantom::connect_phantom(self).await,
+            WalletType::MetaMask => metamask::connect_metamask(self).await,
         }
     }
 }
