@@ -14,20 +14,11 @@ use {
     web_sys::window,
 };
 
-#[derive(Clone)]
-pub struct JsValueWrapper(JsValue);
-
-impl From<JsValueWrapper> for String {
-    fn from(wrapper: JsValueWrapper) -> Self {
-        wrapper.0.as_string().unwrap_or_else(|| format!("{:?}", wrapper.0))
-    }
-}
-
-impl From<JsValue> for JsValueWrapper {
-    fn from(value: JsValue) -> Self {
-        JsValueWrapper(value)
-    }
-}
+#[cfg(target_arch = "wasm32")]
+use self::{
+    phantom::connect_phantom,
+    metamask::connect_metamask,
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TokenBalance {
@@ -58,6 +49,24 @@ pub enum WalletType {
 #[derive(Clone)]
 pub struct WalletContext {
     pub state: RwSignal<WalletState>,
+}
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone)]
+pub struct JsValueWrapper(JsValue);
+
+#[cfg(target_arch = "wasm32")]
+impl From<JsValueWrapper> for String {
+    fn from(wrapper: JsValueWrapper) -> Self {
+        wrapper.0.as_string().unwrap_or_else(|| format!("{:?}", wrapper.0))
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl From<JsValue> for JsValueWrapper {
+    fn from(value: JsValue) -> Self {
+        JsValueWrapper(value)
+    }
 }
 
 impl WalletContext {
