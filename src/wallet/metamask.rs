@@ -3,7 +3,7 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::window;
 use js_sys::{Function, Promise, Object, Reflect, Array};
 use leptos::SignalUpdate;
-use super::{WalletContext, WalletType, TokenBalance};
+use super::{WalletContext, WalletType, TokenBalance, JsValueWrapper};
 
 pub async fn connect_metamask(ctx: &WalletContext) -> Result<(), String> {
     let window = window().ok_or("No window object found")?;

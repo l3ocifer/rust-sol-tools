@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen::JsCast;
 use leptos::SignalUpdate;
-use crate::wallet::{WalletContext, WalletType};
+use super::{WalletContext, WalletType, JsValueWrapper};
 
 pub async fn connect_phantom(wallet_context: &WalletContext) -> Result<(), String> {
     #[cfg(target_arch = "wasm32")]

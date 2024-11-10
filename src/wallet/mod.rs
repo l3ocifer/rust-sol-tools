@@ -9,6 +9,7 @@ use leptos::SignalUpdate;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use js_sys::{Array, Object, Promise, Reflect};
+use web_sys::window;
 
 #[cfg(target_arch = "wasm32")]
 pub use phantom::connect_phantom;
@@ -16,7 +17,7 @@ pub use phantom::connect_phantom;
 pub use metamask::connect_metamask;
 
 #[derive(Clone)]
-struct JsValueWrapper(JsValue);
+pub struct JsValueWrapper(JsValue);
 
 impl From<JsValueWrapper> for String {
     fn from(wrapper: JsValueWrapper) -> Self {
@@ -70,9 +71,9 @@ impl WalletContext {
         if let Some(address) = self.state.get().address {
             match self.state.get().wallet_type {
                 Some(WalletType::Phantom) => {
-                    let window = web_sys::window().ok_or("No window object")?;
-                    let solana = js_sys::Reflect::get(&window, &JsValue::from_str("solana"))
-                        .map_err(|e| e.to_string())?;
+                    let window = window().ok_or("No window object")?;
+                    let solana = Reflect::get(&window, &JsValue::from_str("solana"))
+                        .map_err(|e| JsValueWrapper(e).into())?;
                     
                     let connection = js_sys::Reflect::get(&solana, &JsValue::from_str("connection"))
                         .map_err(|e| e.to_string())?;
@@ -96,9 +97,9 @@ impl WalletContext {
                     Ok(lamports / 1e9) // Convert lamports to SOL
                 }
                 Some(WalletType::MetaMask) => {
-                    let window = web_sys::window().ok_or("No window object")?;
-                    let ethereum = js_sys::Reflect::get(&window, &JsValue::from_str("ethereum"))
-                        .map_err(|e| e.to_string())?;
+                    let window = window().ok_or("No window object")?;
+                    let ethereum = Reflect::get(&window, &JsValue::from_str("ethereum"))
+                        .map_err(|e| JsValueWrapper(e).into())?;
                     
                     let params = Array::new();
                     params.push(&JsValue::from_str(&address));
@@ -217,12 +218,7 @@ impl WalletContext {
     }
 
     pub async fn connect(&self, wallet_type: WalletType) -> Result<(), String> {
-        self.state.update(|state| {
-            state.connecting = true;
-            state.error = None;
-        });
-
-        let result = match wallet_type {
+        let result: Result<(), String> = match wallet_type {
             WalletType::Phantom => connect_phantom(self).await,
             WalletType::MetaMask => connect_metamask(self).await,
         };

@@ -1,10 +1,12 @@
 use borsh::{BorshSerialize, BorshDeserialize};
+use solana_sdk::program_pack::Pack;
+use spl_token_2022::state::Mint as Token2022Mint;
+use spl_token::state::Mint as TokenMint;
 
 #[cfg(not(target_arch = "wasm32"))]
 use {
     solana_client::rpc_client::RpcClient,
     solana_program::{
-        program_pack::Pack,
         pubkey::Pubkey,
         system_instruction,
     },
@@ -57,14 +59,14 @@ pub async fn create_token(
     );
 
     let mint_account = Keypair::new();
-    let mint_rent = rpc_client.get_minimum_balance_for_rent_exemption(Mint::LEN)?;
+    let mint_rent = rpc_client.get_minimum_balance_for_rent_exemption(TokenMint::LEN)?;
 
     let mut instructions = vec![
         system_instruction::create_account(
             &payer.pubkey(),
             &mint_account.pubkey(),
             mint_rent,
-            Mint::LEN as u64,
+            TokenMint::LEN as u64,
             &spl_token_2022::id(),
         ),
         token_instruction::initialize_mint(
