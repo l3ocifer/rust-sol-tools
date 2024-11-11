@@ -9,10 +9,9 @@ use solana_client::rpc_client::RpcClient;
 use spl_token::state::Mint;
 use solana_program::{program_pack::Pack, system_instruction};
 use mpl_token_metadata::{
-    instruction::create_metadata_accounts_v3,
+    accounts::Metadata,
+    instructions::{CreateMetadataAccountV3, CreateMetadataAccountV3InstructionArgs},
     types::DataV2,
-    pda::find_metadata_account,
-    ID as TOKEN_METADATA_PROGRAM_ID,
 };
 use super::{CreateTokenParams, TokenCreationResult};
 
@@ -47,25 +46,29 @@ pub async fn create_token(params: CreateTokenParams) -> Result<TokenCreationResu
     ];
 
     // Create metadata account
-    let (metadata_account, _) = find_metadata_account(&mint.pubkey());
+    let metadata_account = Metadata::find_pda(&mint.pubkey()).0;
     
-    let metadata_instruction = create_metadata_accounts_v3(
-        TOKEN_METADATA_PROGRAM_ID,
-        metadata_account,
-        mint.pubkey(),
-        payer.pubkey(),
-        payer.pubkey(),
-        payer.pubkey(),
-        params.name,
-        params.symbol,
-        params.metadata_uri,
-        None,
-        0,
-        params.is_mutable,
-        None,
-        None,
-        None,
-    );
+    let metadata_instruction = CreateMetadataAccountV3 {
+        metadata: metadata_account,
+        mint: mint.pubkey(),
+        mint_authority: payer.pubkey(),
+        payer: payer.pubkey(),
+        update_authority: (payer.pubkey(), true),
+        system_program: solana_program::system_program::id(),
+        rent: Some(solana_program::sysvar::rent::id()),
+    }.instruction(CreateMetadataAccountV3InstructionArgs {
+        data: DataV2 {
+            name: params.name,
+            symbol: params.symbol,
+            uri: params.metadata_uri,
+            seller_fee_basis_points: 0,
+            creators: None,
+            collection: None,
+            uses: None,
+        },
+        is_mutable: params.is_mutable,
+        collection_details: None,
+    });
     
     instructions.push(metadata_instruction);
 
